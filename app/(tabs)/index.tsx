@@ -1,63 +1,109 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { Image, StyleSheet, Platform } from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { HelloWave } from "@/components/HelloWave";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { Link, Redirect } from "expo-router";
+import { useEffect, useState } from "react";
+import { getUser } from "@/db/dummyData";
+import { User } from "@/db/schema";
 
 export default function HomeScreen() {
+  const [user, setUser] = useState<User | undefined>(undefined);
+  const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
+  useEffect(() => {
+    async function start() {
+      try {
+        const user = await getUser();
+        setUser(user);
+        setIsLoadingUser(false);
+
+        // const response = await fetch("/api/card", {
+        //   method: "POST",
+        //   body: JSON.stringify({ userId: user?.id! }),
+        // });
+        // const data = await response.json();
+        // setCards(data.cards);
+      } catch (e) {
+        console.log(e);
+        // setFetchCardsErrorMessage(
+        //   "Something went wrong: " + (e as Error).message
+        // );
+      }
+    }
+    start();
+  }, []);
+
+  if (isLoadingUser)
+    return (
+      <ThemedView>
+        <ThemedText>"loading user..."</ThemedText>
+      </ThemedView>
+    );
+
+  if (!user) return <Redirect href="/(tabs)" />;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+    // <ParallaxScrollView
+    //   headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+    //   headerImage={
+    //     <Image
+    //       source={require("@/assets/images/partial-react-logo.png")}
+    //       style={styles.reactLogo}
+    //     />
+    //   }
+    // >
+    <ThemedView>
+      <ThemedView>
+        <Link
+          href="/dashboard"
+          style={{
+            backgroundColor: "gray",
+            borderRadius: 16,
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            width: 140,
+          }}
+          // onPress={async () => {
+          //   const response = await fetch("/api/greeting");
+          //   const data = await response.json();
+          //   alert(data.greeting);
+          // }}
+        >
+          <ThemedText>Use as Customer</ThemedText>
+        </Link>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
+
+      <ThemedView>
+        <Link
+          href="/business"
+          style={{
+            backgroundColor: "gray",
+            borderRadius: 16,
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            width: 130,
+          }}
+          // onPress={async () => {
+          //   const response = await fetch("/api/greeting");
+          //   const data = await response.json();
+          //   alert(data.greeting);
+          // }}
+        >
+          <ThemedText>Use as Business</ThemedText>
+        </Link>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </ThemedView>
+
+    // </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   stepContainer: {
@@ -69,6 +115,6 @@ const styles = StyleSheet.create({
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
   },
 });
