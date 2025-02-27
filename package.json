@@ -15,10 +15,12 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.1.17",
     "@expo/vector-icons": "^14.0.2",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "axios": "^1.7.9",
+    "better-auth": "^1.1.16",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.3",
     "drizzle-zod": "^0.7.0",
@@ -29,6 +31,7 @@
     "expo-haptics": "~14.0.1",
     "expo-linking": "~7.0.4",
     "expo-router": "~4.0.17",
+    "expo-secure-store": "^14.0.1",
     "expo-splash-screen": "~0.29.21",
     "expo-status-bar": "~2.0.1",
     "expo-symbols": "~0.2.1",
@@ -38,6 +41,7 @@
     "postgres": "^3.4.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "react-hook-form": "^7.54.2",
     "react-native": "0.76.6",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-qrcode-svg": "^6.3.14",

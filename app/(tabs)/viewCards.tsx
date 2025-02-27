@@ -17,7 +17,7 @@ import { Redirect, useFocusEffect } from "expo-router";
 import { useEffect, useState } from "react";
 import { getUser } from "@/db/dummyData";
 import { useSearchParams } from "expo-router/build/hooks";
-import { Card, User } from "@/db/schema";
+import { LoyaltyCard, User } from "@/db/schema";
 import axios from "axios";
 import QRCode from "react-native-qrcode-svg";
 
@@ -28,7 +28,7 @@ import QRCode from "react-native-qrcode-svg";
 export default function TabTwoScreen() {
   const [user, setUser] = useState<User | undefined>(undefined);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
-  const [cards, setCards] = useState<Card[] | undefined>(undefined);
+  const [cards, setCards] = useState<LoyaltyCard[] | undefined>(undefined);
   const params = useSearchParams();
 
   useEffect(() => {
@@ -36,10 +36,10 @@ export default function TabTwoScreen() {
       setUser(user);
       // console.log(user!.id + " ta");
       setIsLoadingUser(false);
-      axios.post("/api/card", { userId: user?.id! }).then((response) => {
-        const data = response.data.cards as Card[];
-        setCards(data);
-      });
+      // axios.post("/api/card", { userId: user?.id! }).then((response) => {
+      //   const data = response.data.cards as LoyaltyCard[];
+      //   setCards(data);
+      // });
     });
 
     // getCards(user?.id!).then((data) => setCards(data));
@@ -81,20 +81,22 @@ export default function TabTwoScreen() {
   );
 }
 
-function CardComponent({ card }: { card: Card }) {
+function CardComponent({ card }: { card: LoyaltyCard & { points?: number } }) {
   return (
     // <ThemedView style={styles.cardContainer}>
     <ThemedView
       style={{
         maxWidth: 400,
-        backgroundColor: "gray",
+        backgroundColor: "slategray",
         borderRadius: 16,
         padding: 16,
       }}
     >
-      <ThemedText>{card.name}</ThemedText>
+      <ThemedText>{card.description}</ThemedText>
       <ThemedView style={{ flexDirection: "row" }}>
-        <ThemedView style={{ backgroundColor: "gray", flexDirection: "row" }}>
+        <ThemedView
+          style={{ backgroundColor: "slategray", flexDirection: "row" }}
+        >
           {[...Array(card.maxPoints)].map((_, i) => (
             <ThemedText key={i}>
               {i < (card.points ?? 0) ? "✅" : "⚫"}
@@ -108,12 +110,12 @@ function CardComponent({ card }: { card: Card }) {
             flex: 1,
             width: 100,
             height: 100,
-            backgroundColor: "gray",
+            backgroundColor: "slategray",
           }}
         >
           <QRCode
             value="https://localloyalty.expo.app/incrementPoints?cardId=1"
-            backgroundColor="gray"
+            backgroundColor="slategray"
           />
         </ThemedView>
       </ThemedView>

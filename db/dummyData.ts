@@ -1,56 +1,31 @@
-import { eq } from "drizzle-orm";
-import { cards, Card, User } from "./schema";
+import { User } from "./schema";
 
-export type Business = User;
-
-const dummyUser: User = {
-  id: 1,
-  name: "John Doe",
+const businessOwner: User = {
+  id: "2",
+  name: "",
   email: "john@example.com",
   image: "",
-  emailVerified: new Date(),
+  emailVerified: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
-const dummyBusiness: Business = {
-  id: 2,
-  name: "Surf Shack",
+const customer: User = {
+  id: "1",
+  name: "",
   email: "john@example.com",
   image: "",
-  emailVerified: new Date(),
+  emailVerified: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
-// export function getCards(userId: string): Promise<LoyaltyCard[]> {
-//   return db.select().from(cards).where(eq(cards.userId, userId));
-// }
+const dummyUser = businessOwner;
 
 export function getUser(): Promise<User | undefined> {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(dummyUser);
     }, 200);
-  });
-}
-
-export function getBusiness(): Promise<Business | undefined> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(dummyBusiness);
-    }, 200);
-  });
-}
-
-type CreateCardType = {
-  shopId: string;
-  userId: number;
-};
-
-export function createCard({
-  shopId,
-  userId,
-}: CreateCardType): Promise<{ success: boolean }> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true });
-    }, 2000);
   });
 }

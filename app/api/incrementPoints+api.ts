@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { cards } from "@/db/schema";
+import { loyaltyCards } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 export async function POST(request: Request) {
@@ -23,9 +23,9 @@ export async function POST(request: Request) {
   // }
 
   await db
-    .update(cards)
-    .set({ points: sql`${cards.points} + 1` })
-    .where(eq(cards.id, cardId));
+    .update(loyaltyCards)
+    .set({ points: sql`${loyaltyCards.points} + 1` })
+    .where(eq(loyaltyCards.id, cardId));
   return Response.json({ message: "done" });
   // //   const name = new URL(request.url).searchParams.get("name");
   // return Response.json({

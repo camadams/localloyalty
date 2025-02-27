@@ -30,11 +30,11 @@ export default function TabTwoScreen() {
     const cardId = params.get("cardId") || "1";
     setIsIncrementingPoints(true);
     console.log({ cardId });
-    axios.post("/api/incrementPoints", { cardId: cardId }).then((response) => {
-      const message = response.data.message as string;
-      setIsIncrementingPoints(false);
-      setMessage(message);
-    });
+    // axios.post("/api/incrementPoints", { cardId: cardId }).then((response) => {
+    //   const message = response.data.message as string;
+    //   setIsIncrementingPoints(false);
+    //   setMessage(message);
+    // });
     // getCards(user?.id!).then((data) => setCards(data));
   }, []);
 

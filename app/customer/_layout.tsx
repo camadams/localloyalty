@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { Stack } from "expo-router";
 
-export default function DashboardLayout() {
+export default function CustomerLayout() {
   return (
     <Stack
       screenOptions={{
