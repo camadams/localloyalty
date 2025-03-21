@@ -9,7 +9,7 @@ import {
   useGlobalSearchParams,
   useLocalSearchParams,
 } from "expo-router/build/hooks";
-import { LoyaltyCard, User } from "@/db/schema";
+import { Card, User } from "@/db/schema";
 import { GetBusinessEmployeesResponse } from "@/app/api/business/getBusinessEmployees+api";
 
 // export default function TabTwoScreen() {

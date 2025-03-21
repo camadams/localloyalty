@@ -46,6 +46,7 @@ export default function Page() {
           </AppButton>
         </Fragment>
       )}
+      <AppButton onPress={() => router.push("/customer")}>Customer</AppButton>
     </ThemedView>
   );
 }

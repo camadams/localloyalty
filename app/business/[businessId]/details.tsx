@@ -6,7 +6,7 @@ import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { getUser } from "@/db/dummyData";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
-import { LoyaltyCard, User } from "@/db/schema";
+import { Card, User } from "@/db/schema";
 import { GetBusinessDetailsResponse } from "@/app/api/business/getBusinessDetails+api";
 
 // export default function TabTwoScreen() {
@@ -20,7 +20,7 @@ import { GetBusinessDetailsResponse } from "@/app/api/business/getBusinessDetail
 export default function Employees() {
   const [user, setUser] = useState<User | undefined>(undefined);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
-  const [cards, setCards] = useState<LoyaltyCard[] | undefined>(undefined);
+  const [cards, setCards] = useState<Card[] | undefined>(undefined);
   const { businessId } = useGlobalSearchParams<{ businessId: string }>();
   const [businessDetails, setBusinessDetails] = useState<
     GetBusinessDetailsResponse | undefined

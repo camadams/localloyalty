@@ -1,9 +1,11 @@
 import { db } from "@/db";
-import { loyaltyCards } from "@/db/schema";
+import { loyaltyCards, Card, CardInUse } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+export type CardInUseResponse = CardInUse[];
+
 export async function POST(request: Request) {
-  console.log("***!!!!!*****!!!!");
+  console.log(new Date());
   const { userId } = await request.json(); // Extract the request body
   // console.log({ userId });
   // if (!userId) {

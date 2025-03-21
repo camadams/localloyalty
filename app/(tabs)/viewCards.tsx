@@ -17,7 +17,7 @@ import { Redirect, useFocusEffect } from "expo-router";
 import { useEffect, useState } from "react";
 import { getUser } from "@/db/dummyData";
 import { useSearchParams } from "expo-router/build/hooks";
-import { LoyaltyCard, User } from "@/db/schema";
+import { Card, User } from "@/db/schema";
 import axios from "axios";
 import QRCode from "react-native-qrcode-svg";
 
@@ -28,7 +28,7 @@ import QRCode from "react-native-qrcode-svg";
 export default function TabTwoScreen() {
   const [user, setUser] = useState<User | undefined>(undefined);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
-  const [cards, setCards] = useState<LoyaltyCard[] | undefined>(undefined);
+  const [cards, setCards] = useState<Card[] | undefined>(undefined);
   const params = useSearchParams();
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function TabTwoScreen() {
   );
 }
 
-function CardComponent({ card }: { card: LoyaltyCard & { points?: number } }) {
+function CardComponent({ card }: { card: Card & { points?: number } }) {
   return (
     // <ThemedView style={styles.cardContainer}>
     <ThemedView

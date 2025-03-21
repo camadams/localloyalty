@@ -17,7 +17,7 @@ export default function Page() {
         email, // user email address
         password, // user password -> min 8 characters by default
         name: "dfsjo", // user image url (optional)
-        callbackURL: "/(tabs)", // a url to redirect to after the user verifies their email (optional)
+        callbackURL: "https://4xx1vmc-camadams-8081.exp.direct/(tabs)", // a url to redirect to after the user verifies their email (optional)
       },
       {
         onRequest: (ctx) => {

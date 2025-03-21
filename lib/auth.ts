@@ -7,7 +7,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
-  emailAndPassword: {    
+  emailAndPassword: {
     enabled: true,
   },
   // socialProviders: {
@@ -17,5 +17,5 @@ export const auth = betterAuth({
   //   },
   // },
   plugins: [expo()],
-  trustedOrigins: ["myapp://"],
+  trustedOrigins: ["myapp://", "https://4xx1vmc-camadams-8081.exp.direct"],
 });

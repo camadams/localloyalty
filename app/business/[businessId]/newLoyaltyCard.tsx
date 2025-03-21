@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { getUser } from "@/db/dummyData";
-import { loyaltyCards, NewLoyaltyCard, User } from "@/db/schema";
+import { loyaltyCards, NewCard, User } from "@/db/schema";
 import { Redirect, router, useGlobalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -15,9 +15,7 @@ type FormData = {
 export default function NewBusiness() {
   const [user, setUser] = useState<User | undefined>(undefined);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
-  const [formData, setFormData] = useState<NewLoyaltyCard>(
-    {} as NewLoyaltyCard
-  );
+  const [formData, setFormData] = useState<NewCard>({} as NewCard);
   const [error, setError] = useState(""); // State to store validation error
   const [apiError, setAPIError] = useState<string | undefined>(undefined); // State to store validation error
 

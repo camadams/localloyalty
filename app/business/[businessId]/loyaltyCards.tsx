@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Redirect } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
-import { LoyaltyCard, User } from "@/db/schema";
+import { Card, User } from "@/db/schema";
 import { CardComponent } from "@/app/customer";
 import { useEffect, useState } from "react";
 import { getUser } from "@/db/dummyData";
@@ -15,7 +15,7 @@ export default function TabTwoScreen() {
   const [user, setUser] = useState<User | undefined>(undefined);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
   const { businessId } = useGlobalSearchParams<{ businessId: string }>();
-  const [loyaltyCards, setLoyaltyCard] = useState<LoyaltyCard[] | undefined>(
+  const [loyaltyCards, setLoyaltyCard] = useState<Card[] | undefined>(
     undefined
   );
 
@@ -36,7 +36,7 @@ export default function TabTwoScreen() {
           body: JSON.stringify({ businessId }),
         });
         const json = await response.json();
-        setLoyaltyCard(json.data as LoyaltyCard[]);
+        setLoyaltyCard(json.data as Card[]);
         setIsLoadingLoyaltyCards(false);
         console.log({ loyaltyCards });
       } catch (e) {
@@ -92,7 +92,7 @@ export default function TabTwoScreen() {
   );
 }
 
-function LoyaltyCardComponent({ card }: { card: LoyaltyCard }) {
+function LoyaltyCardComponent({ card }: { card: Card }) {
   return (
     <ThemedView>
       <ThemedText>Description: {card.description}</ThemedText>
