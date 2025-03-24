@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loyalty Cards WebSocket Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      #connection-status {
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+      }
+      .connected {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .card-title {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .points {
+        font-size: 16px;
+        font-weight: bold;
+        color: #28a745;
+      }
+      .progress-bar {
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .progress {
+        height: 100%;
+        background-color: #007bff;
+        transition: width 0.3s ease;
+      }
+      .controls {
+        margin: 20px 0;
+      }
+      button {
+        padding: 8px 16px;
+        margin-right: 10px;
+        border: none;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0069d9;
+      }
+      #log {
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        height: 200px;
+        overflow-y: auto;
+        font-family: monospace;
+        margin-top: 20px;
+      }
+      .log-entry {
+        margin-bottom: 5px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+      }
+      .user-id-input {
+        margin-bottom: 15px;
+      }
+      .user-id-input input {
+        padding: 8px;
+        width: 250px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Loyalty Cards WebSocket Test</h1>
+
+    <div id="connection-status" class="disconnected">Disconnected</div>
+
+    <div class="user-id-input">
+      <label for="userId">User ID:</label>
+      <input type="text" id="userId" value="test-user-123" />
+    </div>
+
+    <div class="controls">
+      <button id="connect-btn">Connect</button>
+      <button id="disconnect-btn" disabled>Disconnect</button>
+      <button id="get-cards-btn" disabled>Get Cards</button>
+    </div>
+
+    <h2>Loyalty Cards</h2>
+    <div id="cards-container"></div>
+
+    <h2>WebSocket Log</h2>
+    <div id="log"></div>
+
+    <h2>Business Controls (Test)</h2>
+    <div class="controls">
+      <button id="broadcast-btn">Broadcast Refresh Signal</button>
+    </div>
+
+    <script>
+      // DOM Elements
+      const connectBtn = document.getElementById("connect-btn");
+      const disconnectBtn = document.getElementById("disconnect-btn");
+      const getCardsBtn = document.getElementById("get-cards-btn");
+      const connectionStatus = document.getElementById("connection-status");
+      const cardsContainer = document.getElementById("cards-container");
+      const logContainer = document.getElementById("log");
+      const userIdInput = document.getElementById("userId");
+      const broadcastBtn = document.getElementById("broadcast-btn");
+
+      // WebSocket connection
+      let ws = null;
+      let pingInterval = null;
+
+      function log(message, data) {
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+
+        const timestamp = new Date().toLocaleTimeString();
+        let logText = `[${timestamp}] ${message}`;
+
+        if (data) {
+          try {
+            if (typeof data === "string") {
+              logText += `: ${data}`;
+            } else {
+              logText += `: ${JSON.stringify(data)}`;
+            }
+          } catch (e) {
+            logText += `: ${data}`;
+          }
+        }
+
+        entry.textContent = logText;
+        logContainer.appendChild(entry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+
+      function updateConnectionStatus(connected) {
+        if (connected) {
+          connectionStatus.className = "connected";
+          connectionStatus.textContent = "Connected";
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+          getCardsBtn.disabled = false;
+        } else {
+          connectionStatus.className = "disconnected";
+          connectionStatus.textContent = "Disconnected";
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+          getCardsBtn.disabled = true;
+          if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+          }
+        }
+      }
+
+      function renderCards(cards) {
+        cardsContainer.innerHTML = "";
+
+        if (!cards || cards.length === 0) {
+          cardsContainer.innerHTML = "<p>No loyalty cards available</p>";
+          return;
+        }
+
+        cards.forEach((card) => {
+          const cardElement = document.createElement("div");
+          cardElement.className = "card";
+
+          const cardHeader = document.createElement("div");
+          cardHeader.className = "card-header";
+
+          const cardTitle = document.createElement("div");
+          cardTitle.className = "card-title";
+          cardTitle.textContent = card.loyaltyCard.businessName;
+
+          const points = document.createElement("div");
+          points.className = "points";
+          points.textContent = `${card.points} / ${card.loyaltyCard.maxPoints} points`;
+
+          cardHeader.appendChild(cardTitle);
+          cardHeader.appendChild(points);
+
+          const description = document.createElement("div");
+          description.textContent = card.loyaltyCard.description;
+
+          const progressBar = document.createElement("div");
+          progressBar.className = "progress-bar";
+
+          const progress = document.createElement("div");
+          progress.className = "progress";
+          const progressPercent =
+            (card.points / card.loyaltyCard.maxPoints) * 100;
+          progress.style.width = `${progressPercent}%`;
+
+          progressBar.appendChild(progress);
+
+          cardElement.appendChild(cardHeader);
+          cardElement.appendChild(description);
+          cardElement.appendChild(progressBar);
+
+          cardsContainer.appendChild(cardElement);
+        });
+      }
+
+      function connect() {
+        const userId = userIdInput.value.trim();
+        if (!userId) {
+          alert("Please enter a User ID");
+          return;
+        }
+
+        try {
+          ws = new WebSocket("ws://localhost:8080");
+
+          ws.onopen = () => {
+            log("WebSocket connection established");
+            updateConnectionStatus(true);
+
+            // Register with the server
+            const registerMessage = {
+              type: "register",
+              userId: userId,
+            };
+            ws.send(JSON.stringify(registerMessage));
+            log("Sent registration message", registerMessage);
+
+            // Set up ping interval
+            pingInterval = setInterval(() => {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                const pingMessage = { type: "ping" };
+                ws.send(JSON.stringify(pingMessage));
+                log("Sent ping");
+              }
+            }, 30000);
+          };
+
+          ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              log("Received message", data);
+
+              if (
+                data.type === "initial_data" ||
+                data.type === "card_data" ||
+                data.type === "card_update"
+              ) {
+                renderCards(data.cards);
+              }
+
+              if (data.type === "error") {
+                alert(`Server error: ${data.message}`);
+              }
+            } catch (error) {
+              log("Error parsing message", error);
+            }
+          };
+
+          ws.onclose = () => {
+            log("WebSocket connection closed");
+            updateConnectionStatus(false);
+            ws = null;
+          };
+
+          ws.onerror = (error) => {
+            log("WebSocket error", error);
+          };
+        } catch (error) {
+          log("Error creating WebSocket connection", error);
+        }
+      }
+
+      function disconnect() {
+        if (ws) {
+          ws.close();
+          log("Closing WebSocket connection");
+        }
+      }
+
+      function getCards() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          const userId = userIdInput.value.trim();
+          const message = {
+            type: "get_card",
+            userId: userId,
+          };
+          ws.send(JSON.stringify(message));
+          log("Requested cards", message);
+        } else {
+          log("Cannot request cards: WebSocket is not connected");
+        }
+      }
+
+      function broadcastRefresh() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          const message = {
+            type: "broadcast_refresh",
+          };
+          ws.send(JSON.stringify(message));
+          log("Sent broadcast refresh signal", message);
+        } else {
+          log(
+            "Cannot send broadcast refresh signal: WebSocket is not connected"
+          );
+        }
+      }
+
+      // Event listeners
+      connectBtn.addEventListener("click", connect);
+      disconnectBtn.addEventListener("click", disconnect);
+      getCardsBtn.addEventListener("click", getCards);
+      broadcastBtn.addEventListener("click", broadcastRefresh);
+
+      // Initialize
+      updateConnectionStatus(false);
+      log("WebSocket test page loaded");
+    </script>
+  </body>
+</html>
