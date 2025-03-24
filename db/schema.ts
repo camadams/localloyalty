@@ -125,7 +125,7 @@ export const businessEmployees = pgTable(
   // })
 );
 
-export const usersLoyaltyCards = pgTable("users_loyalty_cards", {
+export const cardsInUse = pgTable("users_loyalty_cards", {
   id: serial("id").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -215,8 +215,8 @@ export type Business = typeof businesses.$inferSelect;
 export type NewBusiness = typeof businesses.$inferInsert;
 export type Card = typeof loyaltyCards.$inferSelect;
 export type NewCard = typeof loyaltyCards.$inferInsert;
-export type CardInUse = typeof usersLoyaltyCards.$inferSelect;
-export type NewCardInUse = typeof usersLoyaltyCards.$inferInsert;
+export type CardInUse = typeof cardsInUse.$inferSelect;
+export type NewCardInUse = typeof cardsInUse.$inferInsert;
 // export type BusinessEmployee = typeof businessEmployees.$inferSelect;
 // export type NewBusinessEmployee = typeof businessEmployees.$inferInsert;
 export type PointsTransaction = typeof pointsTransactions.$inferSelect;

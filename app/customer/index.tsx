@@ -2,34 +2,53 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Link, Redirect } from "expo-router";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { getUser } from "@/db/dummyData";
 import { Card, User } from "@/db/schema";
 import QRCode from "react-native-qrcode-svg";
 import { btnStyle } from "@/constants/Colors";
-import { useQuery } from "@tanstack/react-query";
-import { getCardsInUse } from "@/api/customerCards";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
+import { getCardsInUse } from "@/api/customerCards";
+import { AppButton } from "@/components/ui/AppButton";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function TabTwoScreen() {
-  const { data: session, isPending, error } = useSession();
+  const { user, isPending: isPendingSession } = useAuth();
 
-  const { data: cardsInUse } = useQuery({
-    queryKey: ["cardsInUse"],
-    queryFn: () => getCardsInUse(session?.user.id ?? ""),
-  });
+  const { data: cardsInUseResponse, isLoading: isLoadingCardsInUse } = useQuery(
+    {
+      queryKey: ["cardsInUse"],
+      queryFn: () => getCardsInUse(user?.id ?? ""),
+    }
+  );
 
-  if (isPending) return <ActivityIndicator />;
+  if (isPendingSession) return <ActivityIndicator />;
 
   return (
     <View style={styles.titleContainer}>
-      {cardsInUse == undefined ? (
-        <ThemedText>Loading cardsInUse...</ThemedText>
-      ) : cardsInUse.length === 0 ? (
+      {isPendingSession ? (
+        <ActivityIndicator />
+      ) : isLoadingCardsInUse ? (
+        <Fragment>
+          <ThemedText>Loading cardsInUse...</ThemedText>
+          <ActivityIndicator />
+        </Fragment>
+      ) : cardsInUseResponse?.length === 0 ? (
         <ThemedText>No cardsInUse</ThemedText>
       ) : (
         // cardsInUse.map((card, i) => <CardComponent key={i} card={card} />)
-        <ThemedText>{JSON.stringify(cardsInUse)}</ThemedText>
+        <Fragment>
+          <ThemedText>{JSON.stringify(cardsInUseResponse)}</ThemedText>
+          <ThemedText>{JSON.stringify(user)}</ThemedText>
+          <AppButton
+            onPress={() => {
+              console.log({ ta1: "hiiii" });
+            }}
+          >
+            Invalidate
+          </AppButton>
+        </Fragment>
       )}
       {/* <ThemedText style={{ color: "red" }}>{fetchcardsInUseErrorMessage}</ThemedText> */}
     </View>

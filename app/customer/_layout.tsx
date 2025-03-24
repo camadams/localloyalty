@@ -22,6 +22,15 @@ export default function CustomerLayout() {
         }}
       />
       <Tabs.Screen
+        name="index2"
+        options={{
+          title: "Cards",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="creditcard.and.123" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="newCard"
         options={{
           title: "Add Card",

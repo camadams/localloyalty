@@ -2,12 +2,10 @@ import { useSession } from "@/lib/auth-client";
 import { User } from "better-auth/types";
 import React, { createContext, useContext } from "react";
 
-interface AuthContextType {
+const AuthContext = createContext<{
   user: User | undefined;
   isPending: boolean;
-}
-
-const AuthContext = createContext<AuthContextType>({
+}>({
   user: undefined,
   isPending: true,
 });
@@ -24,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const { user, isPending } = useContext(AuthContext);
+  // console.log(user, isPending);
 
   return { user, isLoggedIn: !!user, isPending };
 }
