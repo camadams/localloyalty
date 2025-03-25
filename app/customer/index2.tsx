@@ -1,5 +1,4 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-
 import { ThemedText } from "@/components/ThemedText";
 import { Fragment, useEffect, useState } from "react";
 import QRCode from "react-native-qrcode-svg";
@@ -8,7 +7,8 @@ import { getCardsInUse } from "@/api/customerCards";
 import { useAuth } from "@/hooks/useAuth";
 import supabase from "@/lib/supabase";
 import { UsersCardResponse } from "../api/customer/card+api";
-import { createWebSocketClient } from "@/cardsWebSocketServer";
+import { createWebSocketClient } from "@/lib/wsClient";
+import { AppButton } from "@/components/ui/AppButton";
 
 export default function TabTwoScreen() {
   const { user, isPending: isPendingSession } = useAuth();
@@ -20,7 +20,6 @@ export default function TabTwoScreen() {
     queryFn: () => getCardsInUse(user?.id ?? ""),
   });
 
-  // Supabase real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel("realtime users_loyalty_cards")
@@ -38,63 +37,72 @@ export default function TabTwoScreen() {
           }
           queryClient.invalidateQueries({ queryKey: ["cardsInUse"] });
 
-          console.log(payload);
+          // console.log(payload);
         }
       )
       .subscribe();
-    // console.log(channel);
     return () => {
       supabase.removeChannel(channel);
     };
   }, [supabase, queryClient]);
 
-  // WebSocket connection for real-time card updates
   useEffect(() => {
     if (!user?.id) return;
 
-    const wsClient = createWebSocketClient().connect(user.id);
-    
-    // Listen for WebSocket messages
-    wsClient.ws.onmessage = (event) => {
+    // Use a URL that's accessible from your iOS device
+    // For local development, you can use your computer's IP address instead of localhost
+    // Example: 'ws://192.168.1.100:8080' - replace with your actual IP address
+    const wsClient = createWebSocketClient("wss://echo.websocket.org");
+
+    // For testing purposes, we're using a public WebSocket echo server
+    // In production, you would use your own WebSocket server
+    const client = wsClient.connect(user.id);
+    const ws = client.getWebSocket();
+
+    if (!ws) {
+      console.error("Failed to create WebSocket connection");
+      return;
+    }
+    console.log(ws);
+    ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data as string);
-        
-        if (data.type === 'initial_data' || data.type === 'card_data' || data.type === 'card_update') {
+        const data = event.data;
+        console.log(data);
+
+        if (
+          data.type === "initial_data" ||
+          data.type === "card_data" ||
+          data.type === "card_update"
+        ) {
           setWsCards(data.cards);
         }
-        
-        // Handle refresh signal from the WebSocket server
-        if (data.type === 'refresh_data') {
-          console.log('Received refresh signal from server, invalidating queries');
+
+        if (data.type === "refresh_data") {
+          console.log(
+            "Received refresh signal from server, invalidating queries"
+          );
           queryClient.invalidateQueries({ queryKey: ["cardsInUse"] });
         }
-        
-        if (data.type === 'error') {
-          console.error('WebSocket error:', data.message);
+
+        if (data.type === "error") {
+          console.error("WebSocket error:", data.message);
         }
       } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+        console.error("Error parsing WebSocket message:", error);
       }
     };
 
-    // Request card data when connection is established
-    wsClient.ws.onopen = () => {
-      // The registration will happen automatically in the client
-      // No need to request cards separately as they'll be sent after registration
-    };
-
     return () => {
-      wsClient.close();
+      client.close();
     };
-  }, [user?.id]);
+  }, [user?.id, queryClient]);
 
-  // Use WebSocket data if available, otherwise fall back to REST API data
   const displayCards = wsCards || usersCards;
   const isLoading = isPendingSession || (isLoadingCardsInUse && !wsCards);
 
   if (isPendingSession) return <ActivityIndicator />;
 
-  console.log({ usersCards, love: 3 });
+  // console.log({ usersCards, love: 3 });
   return (
     <View style={styles.titleContainer}>
       {isLoading ? (
@@ -119,14 +127,6 @@ export default function TabTwoScreen() {
 export function UsersCard({ usersCard }: { usersCard: UsersCardResponse }) {
   return (
     <View style={styles.cardContainer}>
-      {/* <View
-      style={{
-        width: 360,
-        backgroundColor: "slategray",
-        borderRadius: 16,
-        padding: 16,
-      }}
-    > */}
       <ThemedText>{usersCard.loyaltyCard.businessName}</ThemedText>
       <ThemedText>{usersCard.loyaltyCard.description}</ThemedText>
       <View style={styles.rowContainer}>
@@ -144,8 +144,6 @@ export function UsersCard({ usersCard }: { usersCard: UsersCardResponse }) {
           />
         </View>
       </View>
-
-      {/* <ThemedText style={{display:"none"}}>{card.points}</ThemedText> */}
     </View>
   );
 }
