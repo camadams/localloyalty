@@ -39,6 +39,15 @@ export default function CustomerLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="chatroom"
+        options={{
+          title: "Chat",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="message" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

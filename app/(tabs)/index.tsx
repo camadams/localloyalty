@@ -46,7 +46,9 @@ export default function Page() {
           </AppButton>
         </Fragment>
       )}
-      <AppButton onPress={() => router.push("/customer")}>Customer</AppButton>
+      <AppButton onPress={() => router.push("/customer/chatroom")}>
+        Chatroom
+      </AppButton>
     </ThemedView>
   );
 }
