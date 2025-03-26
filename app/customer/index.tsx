@@ -1,97 +1,76 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
-import { Link, Redirect } from "expo-router";
 import { Fragment, useEffect, useState } from "react";
-import { getUser } from "@/db/dummyData";
-import { Card, User } from "@/db/schema";
 import QRCode from "react-native-qrcode-svg";
-import { btnStyle } from "@/constants/Colors";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "@/lib/auth-client";
 import { getCardsInUse } from "@/api/customerCards";
-import { AppButton } from "@/components/ui/AppButton";
 import { useAuth } from "@/hooks/useAuth";
+import supabase from "@/lib/supabase";
+import { UsersCardResponse } from "../api/customer/card+api";
 
 export default function TabTwoScreen() {
   const { user, isPending: isPendingSession } = useAuth();
-
-  const { data: cardsInUseResponse, isLoading: isLoadingCardsInUse } = useQuery(
-    {
-      queryKey: ["cardsInUse"],
-      queryFn: () => getCardsInUse(user?.id ?? ""),
-    }
-  );
+  const {
+    data: usersCards,
+    isLoading: isLoadingCardsInUse,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["cardsInUse"],
+    queryFn: () => getCardsInUse(user?.id ?? ""),
+  });
 
   if (isPendingSession) return <ActivityIndicator />;
 
+  console.log({ usersCards, love: 3 });
   return (
     <View style={styles.titleContainer}>
-      {isPendingSession ? (
-        <ActivityIndicator />
-      ) : isLoadingCardsInUse ? (
+      {isLoadingCardsInUse ? (
         <Fragment>
-          <ThemedText>Loading cardsInUse...</ThemedText>
+          <ThemedText>Loading cards...</ThemedText>
           <ActivityIndicator />
         </Fragment>
-      ) : cardsInUseResponse?.length === 0 ? (
-        <ThemedText>No cardsInUse</ThemedText>
+      ) : !usersCards ? (
+        <ThemedText>No cards available</ThemedText>
       ) : (
-        // cardsInUse.map((card, i) => <CardComponent key={i} card={card} />)
         <Fragment>
-          <ThemedText>{JSON.stringify(cardsInUseResponse)}</ThemedText>
-          <ThemedText>{JSON.stringify(user)}</ThemedText>
-          <AppButton
-            onPress={() => {
-              console.log({ ta1: "hiiii" });
-            }}
-          >
-            Invalidate
-          </AppButton>
+          {usersCards.map((usersCard, i) => (
+            <UsersCard key={i} usersCard={usersCard} />
+          ))}
         </Fragment>
       )}
-      {/* <ThemedText style={{ color: "red" }}>{fetchcardsInUseErrorMessage}</ThemedText> */}
+      {isRefetching && <ActivityIndicator />}
     </View>
   );
 }
 
-export type LoyaltyCardWithPoints = Card & { points?: number };
-
-export function CardComponent({ card }: { card: LoyaltyCardWithPoints }) {
+export function UsersCard({ usersCard }: { usersCard: UsersCardResponse }) {
   return (
-    // <View style={styles.cardContainer}>
-    <View
+    <View style={styles.cardContainer}>
+      {/* <View
       style={{
         width: 360,
         backgroundColor: "slategray",
         borderRadius: 16,
         padding: 16,
       }}
-    >
-      <ThemedText>{card.description}</ThemedText>
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ backgroundColor: "slategray", flexDirection: "row" }}>
-          {[...Array(card.maxPoints)].map((_, i) => (
+    > */}
+      <ThemedText>{usersCard.loyaltyCard.businessName}</ThemedText>
+      <ThemedText>{usersCard.loyaltyCard.description}</ThemedText>
+      <View style={styles.rowContainer}>
+        <View style={styles.pointsContainer}>
+          {[...Array(usersCard.loyaltyCard.maxPoints)].map((_, i) => (
             <ThemedText key={i}>
-              {i < (card.points ?? 0) ? "✅" : "⚫"}
+              {i < (usersCard.points ?? 0) ? "✅" : "⚫"}
             </ThemedText>
           ))}
         </View>
-        <View
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-            width: 100,
-            height: 100,
-            backgroundColor: "slategray",
-          }}
-        >
+        {/* <View style={styles.qrCodeContainer}>
           <QRCode
             value="https://localloyalty.expo.app/incrementPoints?cardId=1"
             backgroundColor="slategray"
           />
-        </View>
+        </View> */}
       </View>
 
       {/* <ThemedText style={{display:"none"}}>{card.points}</ThemedText> */}
@@ -100,9 +79,27 @@ export function CardComponent({ card }: { card: LoyaltyCardWithPoints }) {
 }
 
 const styles = StyleSheet.create({
-  // cardContainer: {
-  //   maxWidth: 400,
-  // },
+  cardContainer: {
+    // width: ,
+    backgroundColor: "slategray",
+    borderRadius: 16,
+    padding: 16,
+  },
+  rowContainer: {
+    flexDirection: "row",
+  },
+  pointsContainer: {
+    backgroundColor: "slategray",
+    flexDirection: "row",
+  },
+  qrCodeContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    width: 100,
+    height: 100,
+    backgroundColor: "slategray",
+  },
   titleContainer: {
     flexDirection: "column",
     gap: 16,

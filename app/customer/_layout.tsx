@@ -12,7 +12,7 @@ export default function CustomerLayout() {
       }}
     >
       {/* Optionally configure static options outside the route.*/}
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="index"
         options={{
           title: "Cards",
@@ -20,9 +20,9 @@ export default function CustomerLayout() {
             <IconSymbol size={28} name="creditcard.and.123" color={color} />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
-        name="index2"
+        name="index"
         options={{
           title: "Cards",
           tabBarIcon: ({ color }) => (

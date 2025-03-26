@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     .leftJoin(businesses, eq(loyaltyCards.businessId, businesses.id))
     .where(eq(cardsInUse.userId, userId));
 
-  console.log(cardsInUseWithLoyaltyInfo[0].points);
+  // console.log(cardsInUseWithLoyaltyInfo[0].points);
 
   return Response.json({ data: cardsInUseWithLoyaltyInfo });
 }
