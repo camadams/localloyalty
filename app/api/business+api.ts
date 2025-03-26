@@ -15,7 +15,7 @@ export type BusinessWithEmployees = {
 
 export async function POST(request: Request) {
   const { userId } = await request.json();
-
+  console.log({ userId });
   const ownedBusinessesAndEmployees = await getOwnedBusinessesAndEmployees(
     userId
   );

@@ -1,6 +1,8 @@
 import { ThemedText } from "@/components/ThemedText";
+import { AppButton } from "@/components/ui/AppButton";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Stack, Tabs } from "expo-router";
+import { Alert } from "react-native";
 
 export default function CustomerLayout() {
   return (
@@ -27,6 +29,15 @@ export default function CustomerLayout() {
           title: "Cards",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="creditcard.and.123" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="userScansPoints"
+        options={{
+          title: "Get Points",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="qrcode" color={color} />
           ),
         }}
       />

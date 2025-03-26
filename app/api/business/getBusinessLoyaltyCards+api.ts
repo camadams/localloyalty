@@ -1,6 +1,8 @@
 import { db } from "@/db";
-import { loyaltyCards } from "@/db/schema";
+import { Card, loyaltyCards } from "@/db/schema";
 import { eq } from "drizzle-orm";
+
+export type CardResponse = Card;
 
 export async function POST(request: Request) {
   const { businessId } = await request.json();

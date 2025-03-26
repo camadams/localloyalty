@@ -15,6 +15,7 @@ const MAPPING = {
   "chevron.right": "chevron-right",
   "plus.app": "add",
   "creditcard.and.123": "credit-card",
+  // "gear.badge.checkmarksetting": "setting",
 } as Partial<
   Record<
     import("expo-symbols").SymbolViewProps["name"],

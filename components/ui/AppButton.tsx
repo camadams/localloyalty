@@ -17,7 +17,7 @@ export function AppButton({
   isLoading,
   icon,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
