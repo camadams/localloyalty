@@ -8,106 +8,31 @@ import { getCardsInUse } from "@/api/customerCards";
 import { useAuth } from "@/hooks/useAuth";
 import supabase from "@/lib/supabase";
 import { UsersCardResponse } from "../api/customer/card+api";
-import { createWebSocketClient } from "@/cardsWebSocketServer";
 
 export default function TabTwoScreen() {
   const { user, isPending: isPendingSession } = useAuth();
-  const queryClient = useQueryClient();
-  const [wsCards, setWsCards] = useState<UsersCardResponse[] | null>(null);
 
   const { data: usersCards, isLoading: isLoadingCardsInUse } = useQuery({
     queryKey: ["cardsInUse"],
     queryFn: () => getCardsInUse(user?.id ?? ""),
   });
 
-  // Supabase real-time subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel("realtime users_loyalty_cards")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "users_loyalty_cards",
-        },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-          }
-          if (payload.eventType === "UPDATE") {
-          }
-          queryClient.invalidateQueries({ queryKey: ["cardsInUse"] });
-
-          console.log(payload);
-        }
-      )
-      .subscribe();
-    // console.log(channel);
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, queryClient]);
-
-  // WebSocket connection for real-time card updates
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const wsClient = createWebSocketClient().connect(user.id);
-    
-    // Listen for WebSocket messages
-    wsClient.ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data as string);
-        
-        if (data.type === 'initial_data' || data.type === 'card_data' || data.type === 'card_update') {
-          setWsCards(data.cards);
-        }
-        
-        // Handle refresh signal from the WebSocket server
-        if (data.type === 'refresh_data') {
-          console.log('Received refresh signal from server, invalidating queries');
-          queryClient.invalidateQueries({ queryKey: ["cardsInUse"] });
-        }
-        
-        if (data.type === 'error') {
-          console.error('WebSocket error:', data.message);
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    };
-
-    // Request card data when connection is established
-    wsClient.ws.onopen = () => {
-      // The registration will happen automatically in the client
-      // No need to request cards separately as they'll be sent after registration
-    };
-
-    return () => {
-      wsClient.close();
-    };
-  }, [user?.id]);
-
-  // Use WebSocket data if available, otherwise fall back to REST API data
-  const displayCards = wsCards || usersCards;
-  const isLoading = isPendingSession || (isLoadingCardsInUse && !wsCards);
-
   if (isPendingSession) return <ActivityIndicator />;
 
   console.log({ usersCards, love: 3 });
   return (
     <View style={styles.titleContainer}>
-      {isLoading ? (
+      {isLoadingCardsInUse ? (
         <Fragment>
           <ThemedText>Loading cards...</ThemedText>
           <ActivityIndicator />
         </Fragment>
-      ) : !displayCards ? (
+      ) : !usersCards ? (
         <ThemedText>No cards available</ThemedText>
       ) : (
         <Fragment>
-          <ThemedText>{displayCards[0]?.points || 0} points</ThemedText>
-          {displayCards.map((usersCard, i) => (
+          <ThemedText>{usersCards[0]?.points || 0} points</ThemedText>
+          {usersCards.map((usersCard, i) => (
             <UsersCard key={i} usersCard={usersCard} />
           ))}
         </Fragment>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LocalLoyalty Chat</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      #chat-container {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      #messages {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      #messages li {
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        background-color: #f1f1f1;
+        border-radius: 4px;
+      }
+      #message-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .form-group {
+        display: flex;
+        gap: 10px;
+      }
+      input {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        flex-grow: 1;
+      }
+      button {
+        padding: 8px 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      #status-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>LocalLoyalty Chat</h1>
+
+    <div id="status-bar">
+      <span>Status: <span id="connection-status">Disconnected</span></span>
+    </div>
+
+    <div id="chat-container">
+      <ul id="messages"></ul>
+    </div>
+
+    <form id="message-form">
+      <div class="form-group">
+        <input type="text" id="name-input" placeholder="Your name" required />
+      </div>
+      <div class="form-group">
+        <input
+          type="text"
+          id="message-input"
+          placeholder="Type a message..."
+          required
+        />
+        <button type="submit">Send</button>
+      </div>
+    </form>
+
+    <script src="/client.js"></script>
+  </body>
+</html>
