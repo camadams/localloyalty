@@ -10,6 +10,5 @@ export async function POST(request: Request) {
     .select()
     .from(loyaltyCards)
     .where(eq(loyaltyCards.businessId, businessId));
-  console.log({ data });
   return Response.json({ data });
 }

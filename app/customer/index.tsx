@@ -43,7 +43,7 @@ export default function TabTwoScreen() {
   );
 
   const handleAddCard = () => {
-    router.push("/customer/newCard");
+    router.push("/customer/addOrScanLoyaltyCard");
   };
 
   if (isPendingSession) {

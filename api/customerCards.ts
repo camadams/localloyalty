@@ -1,4 +1,5 @@
 import { UsersCardResponse } from "@/app/api/customer/card+api";
+import { CardInUse } from "@/db/schema";
 
 export async function getCardsInUse(userId: string) {
   return fetch(`/api/customer/card`, {
@@ -15,23 +16,21 @@ export async function getCardsInUse(userId: string) {
   });
 }
 
-export async function createNewCard({
-  businessId,
-  userId,
-}: {
-  businessId: string;
-  userId: string;
-}) {
-  return fetch("/api/customer/newCard", {
+export type AddOrScanResponse = { message: string; success: boolean };
+export async function addOrScan(
+  loyaltyCardId: CardInUse["loyaltyCardId"],
+  userId: CardInUse["userId"]
+) {
+  return fetch("/api/customer/addOrScan", {
     method: "POST",
-    body: JSON.stringify({ businessId, userId }),
+    body: JSON.stringify({ loyaltyCardId, userId }),
   }).then(async (response) => {
     if (response.ok) {
       const respJson = await response.json();
-      return respJson.data as UsersCardResponse;
+      return respJson.data as AddOrScanResponse;
     } else {
       const error = await response.json();
-      throw new Error(error.error);
+      throw new Error(error.message);
     }
   });
 }

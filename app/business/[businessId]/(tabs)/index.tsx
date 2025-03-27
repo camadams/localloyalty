@@ -18,6 +18,7 @@ import { getBusinessLoyaltyCards } from "@/api/businessData";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import QRCode from "react-native-qrcode-svg";
 
 const { width } = Dimensions.get("window");
 
@@ -134,51 +135,63 @@ export default function LoyaltyCardsScreen() {
 function LoyaltyCardComponent({ card }: { card: Card }) {
   return (
     <View style={styles.cardContainer}>
-      <LinearGradient colors={["#1e3a29", "#2d5a40"]} style={styles.cardHeader}>
-        <ThemedText style={styles.cardTitle}>{card.description}</ThemedText>
-      </LinearGradient>
-
-      <View style={styles.cardBody}>
-        <View style={styles.cardDetail}>
-          <IconSymbol name="star" size={16} color="#ccc" />
-          <ThemedText style={styles.detailText}>
-            {card.maxPoints} points to earn reward
-          </ThemedText>
-        </View>
-
-        <View style={styles.cardDetail}>
-          <IconSymbol
-            name={
-              card.status === "active" ? "checkmark.circle" : "xmark.circle"
-            }
-            size={16}
-            color={card.status === "active" ? "#4CAF50" : "#F44336"}
-          />
-          <ThemedText
-            style={[
-              styles.detailText,
-              {
-                color: card.status === "active" ? "#4CAF50" : "#F44336",
-              },
-            ]}
-          >
-            {card.status.charAt(0).toUpperCase() + card.status.slice(1)}
-          </ThemedText>
-        </View>
-
-        {card.artworkUrl && (
+      <View style={styles.cardContent}>
+        {/* Left side - Card information */}
+        <View style={styles.cardInfo}>
+          <ThemedText style={styles.cardTitle}>{card.description}</ThemedText>
+          
           <View style={styles.cardDetail}>
-            <IconSymbol name="photo" size={16} color="#ccc" />
-            <ThemedText style={styles.detailText}>Custom artwork</ThemedText>
+            <IconSymbol name="star" size={16} color="#ccc" />
+            <ThemedText style={styles.detailText}>
+              {card.maxPoints} points to earn reward
+            </ThemedText>
           </View>
-        )}
-      </View>
 
-      <View style={styles.cardFooter}>
-        <TouchableOpacity style={styles.editButton}>
-          <IconSymbol name="pencil" size={14} color="#ccc" />
-          <ThemedText style={styles.editButtonText}>Edit</ThemedText>
-        </TouchableOpacity>
+          <View style={styles.cardDetail}>
+            <IconSymbol
+              name={
+                card.status === "active" ? "checkmark.circle" : "xmark.circle"
+              }
+              size={16}
+              color={card.status === "active" ? "#4CAF50" : "#F44336"}
+            />
+            <ThemedText
+              style={[
+                styles.detailText,
+                {
+                  color: card.status === "active" ? "#4CAF50" : "#F44336",
+                },
+              ]}
+            >
+              {card.status.charAt(0).toUpperCase() + card.status.slice(1)}
+            </ThemedText>
+          </View>
+
+          {card.artworkUrl && (
+            <View style={styles.cardDetail}>
+              <IconSymbol name="photo" size={16} color="#ccc" />
+              <ThemedText style={styles.detailText}>Custom artwork</ThemedText>
+            </View>
+          )}
+          
+          <TouchableOpacity style={styles.editButton}>
+            <IconSymbol name="pencil" size={14} color="#ccc" />
+            <ThemedText style={styles.editButtonText}>Edit</ThemedText>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Right side - QR Code */}
+        <View style={styles.qrCodeContainer}>
+          <QRCode
+            value={String(card.id)}
+            size={140}
+            color="#000"
+            backgroundColor="#fff"
+          />
+          <ThemedText style={styles.qrCodeText}>
+            Scan to add points
+          </ThemedText>
+        </View>
       </View>
     </View>
   );
@@ -257,33 +270,44 @@ const styles = StyleSheet.create({
     borderColor: "#333",
     marginBottom: 16,
   },
-  cardHeader: {
+  cardContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  cardInfo: {
+    flex: 1,
     padding: 16,
+    justifyContent: "space-between",
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: "white",
-  },
-  cardBody: {
-    padding: 16,
-    gap: 12,
+    marginBottom: 12,
   },
   cardDetail: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginBottom: 8,
   },
   detailText: {
     fontSize: 14,
     color: "#ccc",
   },
-  cardFooter: {
-    borderTopWidth: 1,
-    borderTopColor: "#333",
-    padding: 12,
-    flexDirection: "row",
-    justifyContent: "flex-end",
+  qrCodeContainer: {
+    width: 160,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 10,
+  },
+  qrCodeText: {
+    fontSize: 12,
+    color: "#000",
+    marginTop: 8,
+    fontWeight: "500",
+    textAlign: "center",
   },
   editButton: {
     flexDirection: "row",
@@ -293,6 +317,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     backgroundColor: "rgba(255, 255, 255, 0.05)",
+    alignSelf: "flex-start",
+    marginTop: 12,
   },
   editButtonText: {
     fontSize: 12,

@@ -134,6 +134,7 @@ export const cardsInUse = pgTable("users_loyalty_cards", {
     .notNull()
     .references(() => loyaltyCards.id),
   points: integer("points").default(0).notNull(),
+  // maxPoints: integer("max_points").default(10).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { getUser } from "@/db/dummyData";
 import { useSearchParams } from "expo-router/build/hooks";
 import { User } from "@/db/schema";
-import axios from "axios";
 
 // export default function TabTwoScreen() {
 //   return "hiii";

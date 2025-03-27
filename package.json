@@ -3,7 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start  --tunnel",
+    "dev": "npx expo start  --tunnel",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -22,7 +22,6 @@
     "@react-navigation/native": "^7.0.14",
     "@supabase/supabase-js": "^2.49.1",
     "@tanstack/react-query": "^5.69.0",
-    "axios": "^1.7.9",
     "better-auth": "^1.1.16",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.3",

@@ -4,6 +4,7 @@ import {
   View,
   TouchableOpacity,
   Alert,
+  Platform,
 } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -11,10 +12,11 @@ import { Fragment, useEffect, useState } from "react";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { createNewCard } from "@/api/customerCards";
 import { CameraView, Camera } from "expo-camera";
+import { addOrScan } from "@/api/customerCards";
+import { CardInUse } from "@/db/schema";
 
-export default function NewCard() {
+export default function UserScansPoints() {
   const router = useRouter();
   const { user, isPending: isPendingSession } = useAuth();
   const queryClient = useQueryClient();
@@ -22,7 +24,9 @@ export default function NewCard() {
   // Camera and scanning state
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
-  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [loyaltyCardId, setLoyaltyCardId] = useState<
+    CardInUse["loyaltyCardId"] | null
+  >(null);
 
   // Request camera permissions on component mount
   useEffect(() => {
@@ -32,69 +36,69 @@ export default function NewCard() {
     })();
   }, []);
 
-  // Trigger card creation when business ID is available
+  // Trigger points increment when card ID is available
   useEffect(() => {
-    if (user && businessId && !isCreatingCard) {
-      console.log({ businessId, love: 1111111111111, userId: user.id });
-      createCard({ businessId, userId: user.id });
+    if (loyaltyCardId && !isAddingOrScanning) {
+      console.log({ cardId: loyaltyCardId });
+      addOrScanMutate({
+        loyaltyCardId: loyaltyCardId,
+        userId: user?.id ?? "",
+      });
     }
-  }, [businessId, user]);
+  }, [loyaltyCardId]);
 
   // Handle QR code scanning
-  const handleBarcodeScanned = ({
-    type,
-    data,
-  }: {
-    type: string;
-    data: string;
-  }) => {
+  const handleBarcodeScanned = ({ data }: { data: string }) => {
     try {
       setScanned(true);
-      // Extract business ID from QR code data
-      // Assuming QR code contains a URL like: https://localloyalty.expo.app/business?id=123
+      // Extract loyalty card ID from QR code data
+      // Assuming QR code contains a URL like: https://localloyalty.expo.app/business?loyaltyCardId=123
       const url = new URL(data);
-      const id = url.searchParams.get("id");
-      console.log({ id });
-      if (id) {
-        setBusinessId(id);
-      } else {
-        // If no ID found in URL, check if the data itself is an ID
-        setBusinessId(data);
-      }
+      console.log({ url });
+      const loyaltyCardId = url.searchParams.get("loyaltyCardId");
+      setLoyaltyCardId(Number(loyaltyCardId));
     } catch (error) {
-      console.error("Error parsing QR code:", error);
-      // If URL parsing fails, assume the data itself is the business ID
-      setBusinessId(data);
+      const errorMessage = "Error adding points: " + (error as Error).message;
+      if (Platform.OS === "web") {
+        alert(errorMessage);
+      } else {
+        Alert.alert(errorMessage);
+      }
+      console.error(errorMessage);
+      setScanned(false); // Allow rescanning on error
+      setLoyaltyCardId(null);
     }
   };
 
-  // Mutation for creating a new card
-  const { mutate: createCard, isPending: isCreatingCard } = useMutation({
-    mutationFn: ({
-      businessId,
-      userId,
-    }: {
-      businessId: string;
-      userId: string;
-    }) => createNewCard({ businessId, userId }),
-    onSuccess: () => {
-      // Invalidate the cards query to refresh the cards list
-      queryClient.invalidateQueries({ queryKey: ["cardsInUse"] });
-      // Navigate back to the index page
-      router.replace("/customer");
-    },
-    onError: (error) => {
-      Alert.alert("Error creating card", error.message);
-      console.error("Error creating card:", error);
-      setScanned(false); // Allow rescanning on error
-      setBusinessId(null);
-    },
-  });
+  // Mutation for incrementing points
+  const { mutate: addOrScanMutate, isPending: isAddingOrScanning } =
+    useMutation({
+      mutationFn: ({
+        loyaltyCardId,
+        userId,
+      }: {
+        loyaltyCardId: CardInUse["loyaltyCardId"];
+        userId: CardInUse["userId"];
+      }) => addOrScan(loyaltyCardId, userId),
+      onSuccess: () => {
+        // Invalidate the cards query to refresh the cards list
+        queryClient.invalidateQueries({ queryKey: ["cardsInUse"] });
+        Alert.alert("Success", "Points added successfully!");
+        // Navigate back to the customer page
+        router.replace("/customer");
+      },
+      onError: (error) => {
+        Alert.alert("Error adding points", error.message);
+        console.error("Error adding points:", error);
+        setScanned(false); // Allow rescanning on error
+        setLoyaltyCardId(null);
+      },
+    });
 
   // Handle scanning again
   const handleScanAgain = () => {
     setScanned(false);
-    setBusinessId(null);
+    setLoyaltyCardId(null);
   };
 
   if (isPendingSession) return <ActivityIndicator />;
@@ -126,9 +130,8 @@ export default function NewCard() {
     <View style={styles.container}>
       {!scanned ? (
         <Fragment>
-          <ThemedText style={styles.title}>Scan Business QR Code</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Scan a QR code to add a new loyalty card
+          <ThemedText style={styles.title}>
+            Scan Loyalty Card QR Code
           </ThemedText>
 
           <View style={styles.cameraContainer}>
@@ -144,12 +147,9 @@ export default function NewCard() {
             </View>
           </View>
         </Fragment>
-      ) : isCreatingCard ? (
+      ) : isAddingOrScanning ? (
         <Fragment>
-          <ThemedText style={styles.title}>Creating Loyalty Card</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Please wait while we create your loyalty card...
-          </ThemedText>
+          <ThemedText style={styles.title}>Please Wait</ThemedText>
           <ActivityIndicator
             size="large"
             color="#0000ff"
@@ -159,9 +159,6 @@ export default function NewCard() {
       ) : (
         <Fragment>
           <ThemedText style={styles.title}>QR Code Scanned</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Business ID: {businessId}
-          </ThemedText>
           <TouchableOpacity style={styles.button} onPress={handleScanAgain}>
             <ThemedText style={styles.buttonText}>Scan Again</ThemedText>
           </TouchableOpacity>
@@ -200,34 +197,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   scanArea: {
     width: 200,
     height: 200,
     borderWidth: 2,
     borderColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: "transparent",
   },
   button: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#1e3a29",
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 5,
+    borderRadius: 8,
     marginTop: 20,
   },
   buttonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "500",
   },
   loader: {
-    marginTop: 30,
+    marginTop: 20,
   },
 });

@@ -1,24 +1,12 @@
-import {
-  StyleSheet,
-  Image,
-  Platform,
-  Text,
-  Button,
-  Pressable,
-} from "react-native";
+import { StyleSheet, Pressable } from "react-native";
 
-import { Collapsible } from "@/components/Collapsible";
-import { ExternalLink } from "@/components/ExternalLink";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { IconSymbol } from "@/components/ui/IconSymbol";
-import { Redirect, useFocusEffect } from "expo-router";
+import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { getUser } from "@/db/dummyData";
 import { useSearchParams } from "expo-router/build/hooks";
 import { Card, User } from "@/db/schema";
-import axios from "axios";
 import QRCode from "react-native-qrcode-svg";
 
 // export default function TabTwoScreen() {

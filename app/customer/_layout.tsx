@@ -33,20 +33,11 @@ export default function CustomerLayout() {
         }}
       />
       <Tabs.Screen
-        name="userScansPoints"
+        name="addOrScanLoyaltyCard"
         options={{
-          title: "Get Points",
+          title: "Scan",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="qrcode" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="newCard"
-        options={{
-          title: "Add Card",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="plus.app" color={color} />
           ),
         }}
       />
