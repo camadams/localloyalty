@@ -139,7 +139,7 @@ function LoyaltyCardComponent({ card }: { card: Card }) {
         {/* Left side - Card information */}
         <View style={styles.cardInfo}>
           <ThemedText style={styles.cardTitle}>{card.description}</ThemedText>
-          
+
           <View style={styles.cardDetail}>
             <IconSymbol name="star" size={16} color="#ccc" />
             <ThemedText style={styles.detailText}>
@@ -173,24 +173,22 @@ function LoyaltyCardComponent({ card }: { card: Card }) {
               <ThemedText style={styles.detailText}>Custom artwork</ThemedText>
             </View>
           )}
-          
+
           <TouchableOpacity style={styles.editButton}>
             <IconSymbol name="pencil" size={14} color="#ccc" />
             <ThemedText style={styles.editButtonText}>Edit</ThemedText>
           </TouchableOpacity>
         </View>
-        
+
         {/* Right side - QR Code */}
         <View style={styles.qrCodeContainer}>
           <QRCode
-            value={String(card.id)}
+            value={`https://localloyalty.expo.app/business?loyaltyCardId=${card.id}`}
             size={140}
             color="#000"
             backgroundColor="#fff"
           />
-          <ThemedText style={styles.qrCodeText}>
-            Scan to add points
-          </ThemedText>
+          <ThemedText style={styles.qrCodeText}>Scan to add points</ThemedText>
         </View>
       </View>
     </View>

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { cardsInUse } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
   const { userId, loyaltyCardId } = await request.json(); // Extract the request body
@@ -14,22 +14,33 @@ export async function POST(request: Request) {
   }
 
   try {
+    console.log("Adding or scanning points for user:", userId);
     const [existingCard] = await db
       .select()
       .from(cardsInUse)
-      .where(eq(cardsInUse.loyaltyCardId, loyaltyCardId));
+      .where(
+        and(
+          eq(cardsInUse.loyaltyCardId, loyaltyCardId),
+          eq(cardsInUse.userId, userId)
+        )
+      );
     if (existingCard) {
       const points = existingCard.points + 1; //todo check for max points!!
       await db
         .update(cardsInUse)
         .set({ points })
-        .where(eq(cardsInUse.id, existingCard.id));
+        .where(
+          and(
+            eq(cardsInUse.loyaltyCardId, loyaltyCardId),
+            eq(cardsInUse.userId, userId)
+          )
+        );
       console.log("Card points updated successfully");
     } else {
       const [userCards] = await db
         .insert(cardsInUse)
         .values({
-          userId: userId,
+          userId,
           loyaltyCardId,
         })
         .returning();
