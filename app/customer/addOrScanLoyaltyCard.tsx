@@ -9,7 +9,7 @@ import {
 
 import { ThemedText } from "@/components/ThemedText";
 import { Fragment, useEffect, useState } from "react";
-import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { CameraView, Camera } from "expo-camera";
@@ -42,7 +42,6 @@ export default function UserScansPoints() {
       console.log({ cardId: loyaltyCardId });
       addOrScanMutate({
         loyaltyCardId: loyaltyCardId,
-        userId: user?.id ?? "",
       });
     }
   }, [loyaltyCardId]);
@@ -58,7 +57,8 @@ export default function UserScansPoints() {
       const loyaltyCardId = url.searchParams.get("loyaltyCardId");
       setLoyaltyCardId(Number(loyaltyCardId));
     } catch (error) {
-      const errorMessage = "Error adding points: " + (error as Error).message;
+      const errorMessage =
+        "Error adding or scanning: " + (error as Error).message;
       if (Platform.OS === "web") {
         alert(errorMessage);
       } else {
@@ -75,21 +75,21 @@ export default function UserScansPoints() {
     useMutation({
       mutationFn: ({
         loyaltyCardId,
-        userId,
       }: {
         loyaltyCardId: CardInUse["loyaltyCardId"];
-        userId: CardInUse["userId"];
-      }) => addOrScan(loyaltyCardId, userId),
+      }) => addOrScan(loyaltyCardId),
       onSuccess: () => {
         // Invalidate the cards query to refresh the cards list
         queryClient.invalidateQueries({ queryKey: ["cardsInUse"] });
-        Alert.alert("Success", "Points added successfully!");
+        // Alert.alert("Success", "Points added successfully!");
         // Navigate back to the customer page
         router.replace("/customer");
       },
       onError: (error) => {
-        Alert.alert("Error adding points", error.message);
-        console.error("Error adding points:", error);
+        const errorMessage =
+          "Error adding or scanning: " + (error as Error).message;
+        Alert.alert(errorMessage);
+        console.error(errorMessage);
         setScanned(false); // Allow rescanning on error
         setLoyaltyCardId(null);
       },

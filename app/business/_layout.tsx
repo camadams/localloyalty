@@ -21,7 +21,6 @@ export default function BusinessLayout() {
       <Stack.Screen
         name="index"
         options={{
-          // headerShown: false,
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <IconSymbol name="building.2" size={24} color="white" />
@@ -45,31 +44,13 @@ export default function BusinessLayout() {
           ),
         }}
       />
-      <Stack.Screen
-        name="asdfasdf"
-        options={{
-          headerTitle: () => (
-            <View style={styles.headerTitleContainer}>
-              <IconSymbol name="qrcode" size={24} color="white" />
-              <ThemedText style={styles.headerTitle}>
-                Business QR Code
-              </ThemedText>
-            </View>
-          ),
-        }}
-      />
+
       <Stack.Screen
         name="[businessId]"
         options={{
           headerShown: false,
         }}
       />
-      {/* <Stack.Screen
-        name="asdf"
-        options={{
-          headerShown: false,
-        }}
-      /> */}
     </Stack>
   );
 }

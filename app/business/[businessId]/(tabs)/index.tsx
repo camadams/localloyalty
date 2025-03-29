@@ -7,11 +7,10 @@ import {
 } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { Link, Redirect, useRouter } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { Card } from "@/db/schema";
-import { Fragment, useCallback } from "react";
+import React, { Fragment, useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { getBusinessLoyaltyCards } from "@/api/businessData";
@@ -26,6 +25,7 @@ export default function LoyaltyCardsScreen() {
   const router = useRouter();
   const { businessId } = useGlobalSearchParams<{ businessId: string }>();
   const { user, isPending: isPendingAuth } = useAuth();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Fetch loyalty cards for this business
   const {
@@ -33,19 +33,20 @@ export default function LoyaltyCardsScreen() {
     isLoading: isLoadingCards,
     isRefetching,
     refetch,
+    error,
   } = useQuery({
     queryKey: ["businessLoyaltyCards", businessId],
-    queryFn: () => getBusinessLoyaltyCards(Number(businessId)),
-    enabled: !!businessId && !!user?.id,
+    queryFn: () => {
+      return getBusinessLoyaltyCards(Number(businessId));
+    },
   });
 
-  // Refresh data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      if (businessId && user?.id) {
+      if (user?.id) {
         refetch();
       }
-    }, [businessId, user?.id, refetch])
+    }, [user?.id, refetch])
   );
 
   const handleAddLoyaltyCard = () => {
@@ -96,6 +97,17 @@ export default function LoyaltyCardsScreen() {
             Loading loyalty cards...
           </ThemedText>
         </View>
+      ) : error ? (
+        <View style={styles.contentContainer}>
+          <IconSymbol
+            name="exclamationmark.triangle"
+            size={48}
+            color="#F44336"
+          />
+          <ThemedText style={[styles.messageText, { color: "#F44336" }]}>
+            {error.message}
+          </ThemedText>
+        </View>
       ) : !loyaltyCards || loyaltyCards.length === 0 ? (
         <View style={styles.contentContainer}>
           <IconSymbol name="creditcard" size={48} color="#444" />
@@ -114,7 +126,7 @@ export default function LoyaltyCardsScreen() {
       ) : (
         <Fragment>
           <View style={styles.cardsContainer}>
-            {loyaltyCards.map((card) => (
+            {loyaltyCards.map((card: Card) => (
               <LoyaltyCardComponent key={card.id} card={card} />
             ))}
           </View>

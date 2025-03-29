@@ -1,5 +1,7 @@
 import { db } from "@/db";
 import { businessEmployees, businesses, loyaltyCards, user } from "@/db/schema";
+import { withAuth } from "@/lib/withAuth";
+import { User } from "better-auth/types";
 import { eq, inArray } from "drizzle-orm";
 
 export type BusinessWithEmployees = {
@@ -13,18 +15,14 @@ export type BusinessWithEmployees = {
   }[];
 };
 
-export async function POST(request: Request) {
-  const { userId } = await request.json();
-  console.log({ userId });
+export const POST = withAuth(async (request: Request, user: User) => {
   const ownedBusinessesAndEmployees = await getOwnedBusinessesAndEmployees(
-    userId
+    user.id
   );
-  // console.log({ ownedBusinessesAndEmployees });
-  // console.log(typeof ownedBusinessesAndEmployees == BusinessWithEmployees);
   return Response.json({
     ownedBusinessesAndEmployees,
   });
-}
+});
 
 async function getOwnedBusinessesAndEmployees(
   userId: string

@@ -1,12 +1,14 @@
 import { db } from "@/db";
 import { cardsInUse } from "@/db/schema";
+import { withAuth } from "@/lib/withAuth";
 import { and, eq } from "drizzle-orm";
+import { User } from "better-auth/types";
 
-export async function POST(request: Request) {
-  const { userId, loyaltyCardId } = await request.json(); // Extract the request body
-  if (!userId || !loyaltyCardId) {
+export const POST = withAuth(async (request: Request, user: User) => {
+  const { loyaltyCardId } = await request.json(); // Extract the request body
+  if (!loyaltyCardId) {
     return Response.json(
-      { message: "userId and loyaltyCardId are required", success: false },
+      { message: "loyaltyCardId is required", success: false },
       {
         status: 400,
       }
@@ -14,14 +16,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    console.log("Adding or scanning points for user:", userId);
+    console.log("Adding or scanning points for user:", user.id);
     const [existingCard] = await db
       .select()
       .from(cardsInUse)
       .where(
         and(
           eq(cardsInUse.loyaltyCardId, loyaltyCardId),
-          eq(cardsInUse.userId, userId)
+          eq(cardsInUse.userId, user.id)
         )
       );
     if (existingCard) {
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
         .where(
           and(
             eq(cardsInUse.loyaltyCardId, loyaltyCardId),
-            eq(cardsInUse.userId, userId)
+            eq(cardsInUse.userId, user.id)
           )
         );
       console.log("Card points updated successfully");
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
       const [userCards] = await db
         .insert(cardsInUse)
         .values({
-          userId,
+          userId: user.id,
           loyaltyCardId,
         })
         .returning();
@@ -62,4 +64,4 @@ export async function POST(request: Request) {
       }
     );
   }
-}
+});

@@ -11,7 +11,7 @@ import { Link, Redirect, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { getBusinessesForUser } from "@/api/businessData";
-import { BusinessWithEmployees } from "../api/business+api";
+import { BusinessWithEmployees } from "../api/business/business+api";
 import { Entypo } from "@expo/vector-icons";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useFocusEffect } from "@react-navigation/native";
@@ -28,8 +28,7 @@ export default function TabTwoScreen() {
     refetch,
   } = useQuery({
     queryKey: ["userBusinesses"],
-    queryFn: () => getBusinessesForUser(user?.id ?? ""),
-    enabled: !!user?.id,
+    queryFn: () => getBusinessesForUser(),
   });
 
   // Refresh data when screen comes into focus

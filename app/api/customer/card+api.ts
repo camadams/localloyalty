@@ -7,6 +7,9 @@ import {
   businesses,
   Business,
 } from "@/db/schema";
+import { auth } from "@/lib/auth";
+import { withAuth } from "@/lib/withAuth";
+import { User } from "better-auth/types";
 import { eq } from "drizzle-orm";
 
 export type UsersCardResponse = {
@@ -21,28 +24,12 @@ export type UsersCardResponse = {
   };
 };
 
-export async function POST(request: Request) {
-  console.log(new Date());
-
-  const body = await request.json();
-  const { userId } = body;
-  console.log({ userId, ta2: 2 });
-  // if (!userId) {
-  //   return new Response(JSON.stringify({ error: "userId is required" }), {
-  //     status: 400,
-  //   });
-  // }
-
+export const POST = withAuth(async (request: Request, user: User) => {
   const cardsInUseWithLoyaltyInfo = await db
     .select({
-      // id: cardsInUse.id,
-      // userId: cardsInUse.userId,
-      // loyaltyCardId: cardsInUse.loyaltyCardId,
       points: cardsInUse.points,
       createdAt: cardsInUse.createdAt,
       loyaltyCard: {
-        // id: loyaltyCards.id,
-        // businessId: loyaltyCards.businessId,
         description: loyaltyCards.description,
         maxPoints: loyaltyCards.maxPoints,
         status: loyaltyCards.status,
@@ -53,9 +40,6 @@ export async function POST(request: Request) {
     .from(cardsInUse)
     .leftJoin(loyaltyCards, eq(cardsInUse.loyaltyCardId, loyaltyCards.id))
     .leftJoin(businesses, eq(loyaltyCards.businessId, businesses.id))
-    .where(eq(cardsInUse.userId, userId));
-
-  // console.log(cardsInUseWithLoyaltyInfo[0].points);
-
+    .where(eq(cardsInUse.userId, user.id));
   return Response.json({ data: cardsInUseWithLoyaltyInfo });
-}
+});

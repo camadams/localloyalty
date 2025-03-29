@@ -16,12 +16,14 @@ import { UsersCardResponse } from "../api/customer/card+api";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSession } from "@/lib/auth-client";
 
 const { width } = Dimensions.get("window");
 
 export default function TabTwoScreen() {
   const router = useRouter();
   const { user, isPending: isPendingSession } = useAuth();
+  const ses = useSession();
   const {
     data: usersCards,
     isLoading: isLoadingCardsInUse,
@@ -29,8 +31,7 @@ export default function TabTwoScreen() {
     refetch,
   } = useQuery({
     queryKey: ["cardsInUse"],
-    queryFn: () => getCardsInUse(user?.id ?? ""),
-    enabled: !!user?.id,
+    queryFn: () => getCardsInUse(),
   });
 
   // Refresh data when screen comes into focus
@@ -63,6 +64,7 @@ export default function TabTwoScreen() {
       </View> */}
 
       {/* Loading state */}
+      <ThemedText>{JSON.stringify(ses, null, 2)}</ThemedText>
       {isLoadingCardsInUse ? (
         <View style={styles.contentContainer}>
           <ActivityIndicator size="large" color="#1e3a29" />
