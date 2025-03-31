@@ -4,15 +4,17 @@ import {
   View,
   TouchableOpacity,
   Image,
+  Alert,
+  Platform,
 } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Redirect } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { getBusinessEmployees } from "@/api/businessData";
+import { getBusinessEmployees, updateEmployeeStatus } from "@/api/businessData";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,6 +23,7 @@ import { GetBusinessEmployeesResponse } from "@/app/api/business/getBusinessEmpl
 export default function EmployeesScreen() {
   const { businessId } = useGlobalSearchParams<{ businessId: string }>();
   const { user, isPending: isPendingAuth } = useAuth();
+  const queryClient = useQueryClient();
 
   // Fetch employees for this business
   const {
@@ -33,6 +36,107 @@ export default function EmployeesScreen() {
     queryFn: () => getBusinessEmployees(Number(businessId)),
     enabled: !!businessId && !!user?.id,
   });
+
+  // Mutation for updating employee status
+  const { mutate: updateStatus, isPending: isUpdating } = useMutation({
+    mutationFn: ({
+      employeeId,
+      status,
+      canGivePoints,
+    }: {
+      employeeId: number;
+      status: "active" | "suspended" | "revoked";
+      canGivePoints: boolean;
+    }) =>
+      updateEmployeeStatus(
+        employeeId,
+        Number(businessId),
+        status,
+        canGivePoints
+      ),
+    onSuccess: () => {
+      // Refetch employees after successful update
+      queryClient.invalidateQueries({
+        queryKey: ["businessEmployees", businessId],
+      });
+      Alert.alert("Success", "Employee status updated successfully");
+    },
+    onError: (error) => {
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Failed to update employee status"
+      );
+    },
+  });
+
+  // Handle approving a job application
+  const handleApproveApplication = (employeeId: number) => {
+    if (Platform.OS === "web") {
+      if (confirm("Do you want to approve this job application?")) {
+        updateStatus({
+          employeeId,
+          status: "active",
+          canGivePoints: true,
+        });
+      }
+    } else {
+      Alert.alert(
+        "Approve Application",
+        "Do you want to approve this job application?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Approve",
+            onPress: () =>
+              updateStatus({
+                employeeId,
+                status: "active",
+                canGivePoints: true,
+              }),
+          },
+        ]
+      );
+    }
+  };
+
+  // Handle rejecting a job application
+  const handleRejectApplication = (employeeId: number) => {
+    if (Platform.OS === "web") {
+      if (confirm("Do you want to reject this job application?")) {
+        updateStatus({
+          employeeId,
+          status: "revoked",
+          canGivePoints: false,
+        });
+      }
+    } else {
+      Alert.alert(
+        "Reject Application",
+        "Do you want to reject this job application?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Reject",
+            onPress: () =>
+              updateStatus({
+                employeeId,
+                status: "revoked",
+                canGivePoints: false,
+              }),
+            style: "destructive",
+          },
+        ]
+      );
+    }
+  };
 
   // Refresh data when screen comes into focus
   useFocusEffect(
@@ -53,6 +157,13 @@ export default function EmployeesScreen() {
 
   if (!user) return <Redirect href="/(tabs)" />;
 
+  // Group employees by status
+  const pendingEmployees =
+    employees?.filter((emp) => emp.status === "pending") || [];
+  const activeEmployees =
+    employees?.filter((emp) => emp.status === "active") || [];
+
+  console.log({ pendingEmployees, activeEmployees });
   return (
     <View style={styles.container}>
       {/* Header with title */}
@@ -84,9 +195,44 @@ export default function EmployeesScreen() {
         </View>
       ) : (
         <View style={styles.employeesContainer}>
-          {employees.map((employee, index) => (
-            <EmployeeCard key={index} employee={employee} />
-          ))}
+          {/* Pending Applications Section */}
+          {pendingEmployees.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <IconSymbol name="clock" size={18} color="#FFC107" />
+                <ThemedText style={styles.sectionTitle}>
+                  Pending Applications
+                </ThemedText>
+              </View>
+              {pendingEmployees.map((employee, index) => (
+                <EmployeeCard
+                  key={`pending-${index}`}
+                  employee={employee}
+                  onApprove={handleApproveApplication}
+                  onReject={handleRejectApplication}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Active Employees Section */}
+          {activeEmployees.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <IconSymbol
+                  name="person.badge.shield.checkmark"
+                  size={18}
+                  color="#4CAF50"
+                />
+                <ThemedText style={styles.sectionTitle}>
+                  Active Employees
+                </ThemedText>
+              </View>
+              {activeEmployees.map((employee, index) => (
+                <EmployeeCard key={`active-${index}`} employee={employee} />
+              ))}
+            </View>
+          )}
         </View>
       )}
 
@@ -97,18 +243,37 @@ export default function EmployeesScreen() {
           <ThemedText style={styles.refetchingText}>Updating...</ThemedText>
         </View>
       )}
+
+      {/* Updating status indicator */}
+      {isUpdating && (
+        <View style={styles.updatingContainer}>
+          <ActivityIndicator size="small" color="#1e3a29" />
+          <ThemedText style={styles.updatingText}>
+            Updating status...
+          </ThemedText>
+        </View>
+      )}
     </View>
   );
 }
 
 function EmployeeCard({
   employee,
+  onApprove,
+  onReject,
 }: {
   employee: GetBusinessEmployeesResponse[0];
+  onApprove?: (employeeId: number) => void;
+  onReject?: (employeeId: number) => void;
 }) {
+  const isPending = employee.status === "pending";
+
   return (
-    <View style={styles.employeeCard}>
-      <LinearGradient colors={["#1e3a29", "#2d5a40"]} style={styles.cardHeader}>
+    <View style={[styles.employeeCard, isPending && styles.pendingCard]}>
+      <LinearGradient
+        colors={isPending ? ["#8B6F1A", "#C9A63C"] : ["#1e3a29", "#2d5a40"]}
+        style={styles.cardHeader}
+      >
         <View style={styles.employeeHeader}>
           {employee.employeeImage ? (
             <Image
@@ -120,9 +285,19 @@ function EmployeeCard({
               <IconSymbol name="person" size={24} color="#fff" />
             </View>
           )}
-          <ThemedText style={styles.employeeName}>
-            {employee.employeeName}
-          </ThemedText>
+          <View style={styles.employeeInfo}>
+            <ThemedText style={styles.employeeName}>
+              {employee.employeeName}
+            </ThemedText>
+            {isPending && (
+              <View style={styles.statusBadge}>
+                <IconSymbol name="clock" size={12} color="#FFC107" />
+                <ThemedText style={styles.statusText}>
+                  Pending Approval
+                </ThemedText>
+              </View>
+            )}
+          </View>
         </View>
       </LinearGradient>
 
@@ -154,10 +329,37 @@ function EmployeeCard({
       </View>
 
       <View style={styles.cardFooter}>
-        <TouchableOpacity style={styles.editButton}>
-          <IconSymbol name="pencil" size={14} color="#ccc" />
-          <ThemedText style={styles.editButtonText}>Edit</ThemedText>
-        </TouchableOpacity>
+        {isPending && onApprove && onReject ? (
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.rejectButton]}
+              onPress={() => onReject(employee.employeeId)}
+            >
+              <IconSymbol name="xmark" size={14} color="#F44336" />
+              <ThemedText
+                style={[styles.actionButtonText, styles.rejectButtonText]}
+              >
+                Reject
+              </ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.approveButton]}
+              onPress={() => onApprove(employee.employeeId)}
+            >
+              <IconSymbol name="checkmark" size={14} color="#4CAF50" />
+              <ThemedText
+                style={[styles.actionButtonText, styles.approveButtonText]}
+              >
+                Approve
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.editButton}>
+            <IconSymbol name="pencil" size={14} color="#ccc" />
+            <ThemedText style={styles.editButtonText}>Edit</ThemedText>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -226,7 +428,25 @@ const styles = StyleSheet.create({
     color: "white",
   },
   employeesContainer: {
-    gap: 16,
+    gap: 24,
+  },
+  sectionContainer: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ccc",
   },
   employeeCard: {
     backgroundColor: "#1a1a1a",
@@ -236,6 +456,9 @@ const styles = StyleSheet.create({
     borderColor: "#333",
     marginBottom: 16,
   },
+  pendingCard: {
+    borderColor: "#FFC107",
+  },
   cardHeader: {
     padding: 16,
   },
@@ -243,6 +466,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  employeeInfo: {
+    flex: 1,
   },
   employeeImage: {
     width: 40,
@@ -263,6 +489,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "white",
   },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#FFC107",
+    fontWeight: "500",
+  },
   employeeDetails: {
     padding: 16,
     gap: 12,
@@ -282,6 +519,39 @@ const styles = StyleSheet.create({
     padding: 12,
     flexDirection: "row",
     justifyContent: "flex-end",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  approveButton: {
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    borderWidth: 1,
+    borderColor: "#4CAF50",
+  },
+  rejectButton: {
+    backgroundColor: "rgba(244, 67, 54, 0.1)",
+    borderWidth: 1,
+    borderColor: "#F44336",
+  },
+  actionButtonText: {
+    fontSize: 12,
+  },
+  approveButtonText: {
+    color: "#4CAF50",
+    fontWeight: "500",
+  },
+  rejectButtonText: {
+    color: "#F44336",
+    fontWeight: "500",
   },
   editButton: {
     flexDirection: "row",
@@ -308,6 +578,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   refetchingText: {
+    fontSize: 12,
+    color: "#ccc",
+  },
+  updatingContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 8,
+    padding: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginHorizontal: 16,
+  },
+  updatingText: {
     fontSize: 12,
     color: "#ccc",
   },

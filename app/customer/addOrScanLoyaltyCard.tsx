@@ -36,26 +36,30 @@ export default function UserScansPoints() {
     })();
   }, []);
 
-  // Trigger points increment when card ID is available
-  useEffect(() => {
-    if (loyaltyCardId && !isAddingOrScanning) {
-      console.log({ cardId: loyaltyCardId });
-      addOrScanMutate({
-        loyaltyCardId: loyaltyCardId,
-      });
-    }
-  }, [loyaltyCardId]);
-
   // Handle QR code scanning
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     try {
       setScanned(true);
       // Extract loyalty card ID from QR code data
-      // Assuming QR code contains a URL like: https://localloyalty.expo.app/business?loyaltyCardId=123
+      // Assuming QR code contains a URL like: https://localloyalty.expo.app/business?loyaltyCardId=123&timestamp=1234567890
       const url = new URL(data);
       console.log({ url });
       const loyaltyCardId = url.searchParams.get("loyaltyCardId");
+      const timestamp = url.searchParams.get("timestamp");
+
+      // Store timestamp in state to pass to the API
+      if (!timestamp) {
+        throw new Error("Invalid QR code: missing timestamp");
+      }
       setLoyaltyCardId(Number(loyaltyCardId));
+
+      // Pass the timestamp to the mutation
+      if (loyaltyCardId) {
+        addOrScanMutate({
+          loyaltyCardId: Number(loyaltyCardId),
+          timestamp: Number(timestamp),
+        });
+      }
     } catch (error) {
       const errorMessage =
         "Error adding or scanning: " + (error as Error).message;
@@ -75,9 +79,11 @@ export default function UserScansPoints() {
     useMutation({
       mutationFn: ({
         loyaltyCardId,
+        timestamp,
       }: {
         loyaltyCardId: CardInUse["loyaltyCardId"];
-      }) => addOrScan(loyaltyCardId),
+        timestamp: number;
+      }) => addOrScan(loyaltyCardId, timestamp),
       onSuccess: () => {
         // Invalidate the cards query to refresh the cards list
         queryClient.invalidateQueries({ queryKey: ["cardsInUse"] });

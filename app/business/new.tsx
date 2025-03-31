@@ -1,142 +1,240 @@
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { getUser } from "@/db/dummyData";
-import { User } from "@/db/schema";
-import { Redirect, router } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { TextInput, Button, StyleSheet } from "react-native";
+import { Redirect, useRouter } from "expo-router";
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createBusiness } from "@/api/businessData";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { LinearGradient } from "expo-linear-gradient";
 
-type FormData = {
+type BusinessFormData = {
   name: string;
-  ownerId: string;
 };
 
 export default function NewBusiness() {
-  const [user, setUser] = useState<User | undefined>(undefined);
-  const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
-  const [formData, setFormData] = useState({ ownerId: "", name: "" });
-  const [error, setError] = useState(""); // State to store validation error
-  const [apiError, setAPIError] = useState<string | undefined>(undefined); // State to store validation error
+  const router = useRouter();
+  const { user, isPending: isPendingAuth } = useAuth();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    async function start() {
-      try {
-        const user = await getUser();
+  // Form state
+  const [formData, setFormData] = useState<BusinessFormData>({
+    name: "",
+  });
 
-        setUser(user);
-        setIsLoadingUser(false);
+  // Form validation state
+  const [errors, setErrors] = useState<{
+    name?: string;
+  }>({});
 
-        const userId = user?.id!;
-        setFormData((prev) => ({ ...prev, ownerId: userId.toString() }));
-      } catch (e) {
-        console.log(e);
-      }
+  // Create mutation
+  const {
+    mutate,
+    isPending: isSubmitting,
+    error: submitError,
+  } = useMutation({
+    mutationFn: (data: { name: string }) => createBusiness(data.name),
+    onSuccess: () => {
+      // Invalidate the query to refresh the businesses list
+      queryClient.invalidateQueries({
+        queryKey: ["businesses"],
+      });
+      router.back();
+    },
+  });
+
+  // Validate form
+  const validateForm = (): boolean => {
+    const newErrors: typeof errors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Business name is required";
+    } else if (formData.name.trim().length < 3) {
+      newErrors.name = "Business name must be at least 3 characters long";
     }
-    start();
-  }, []);
 
-  if (isLoadingUser)
-    return (
-      <ThemedView>
-        <ThemedText>"loading user..."</ThemedText>
-      </ThemedView>
-    );
-
-  if (!user) return <Redirect href="/" />;
-
-  //   const {
-  //     control,
-  //     handleSubmit,
-  //     formState: { errors },
-  //   } = useForm<FormData>();
-  //   const [submittedData, setSubmittedData] = useState<FormData | null>(null);
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Handle form submission
-  const handleSubmit = async () => {
-    try {
-      if (formData.name.length < 3) {
-        setError("Name must be at least 3 characters long");
-        return;
-      }
-      setError(""); // Clear error if validation passes
-      const resp = await fetch("/api/newbusiness", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const respData = await resp.json();
-      const message = respData.message;
-      router.back();
-    } catch (e) {
-      setAPIError((e as Error).message);
+  const handleSubmit = () => {
+    if (validateForm()) {
+      mutate({ name: formData.name });
     }
   };
 
+  if (isPendingAuth) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1e3a29" />
+      </View>
+    );
+  }
+
+  if (!user) return <Redirect href="/(tabs)" />;
+
   return (
-    <ThemedView style={{ padding: 20, backgroundColor: "slategray" }}>
-      {/* <ThemedText style={{ fontSize: 18, fontWeight: "bold" }}>
-        Create New Business
-      </ThemedText> */}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.formContainer}>
+          <LinearGradient
+            colors={["#1e3a29", "#2d5a40"]}
+            style={styles.formHeader}
+          >
+            <IconSymbol name="building.2" size={24} color="white" />
+            <ThemedText style={styles.formHeaderTitle}>New Business</ThemedText>
+          </LinearGradient>
 
-      {/* <ThemedText style={{ marginTop: 10 }}>Your Business Name:</ThemedText> */}
-      <TextInput
-        style={{
-          height: 40,
-          borderWidth: 1,
-          marginVertical: 10,
-          paddingHorizontal: 8,
-        }}
-        placeholder="Enter your business name"
-        value={formData.name}
-        onChangeText={(text) =>
-          setFormData((prev) => ({ ...prev, name: text }))
-        }
-      />
+          <View style={styles.formBody}>
+            {/* Business Name Field */}
+            <View style={styles.formGroup}>
+              <ThemedText style={styles.label}>Business Name *</ThemedText>
+              <TextInput
+                style={[styles.input, errors.name && styles.inputError]}
+                placeholder="Enter business name"
+                placeholderTextColor="#666"
+                value={formData.name}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, name: text }))
+                }
+              />
+              {errors.name && (
+                <ThemedText style={styles.errorText}>
+                  {errors.name}
+                </ThemedText>
+              )}
+              <ThemedText style={styles.helperText}>
+                This will be displayed to customers
+              </ThemedText>
+            </View>
 
-      <ThemedView style={{ backgroundColor: "blue" }}>
-        <Button title="Submit" onPress={handleSubmit} />
-      </ThemedView>
-      {error ? (
-        <ThemedText style={{ color: "red", marginBottom: 10 }}>
-          {error}
-        </ThemedText>
-      ) : null}
-      {apiError && (
-        <ThemedText style={{ color: "red", marginBottom: 10 }}>
-          {apiError}
-        </ThemedText>
-      )}
-    </ThemedView>
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[styles.submitButton, isSubmitting && styles.disabledButton]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <IconSymbol name="plus" size={18} color="white" />
+                  <ThemedText style={styles.submitButtonText}>
+                    Create Business
+                  </ThemedText>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Display API error if any */}
+            {submitError && (
+              <ThemedText style={styles.errorText}>
+                {submitError instanceof Error ? submitError.message : "An error occurred"}
+              </ThemedText>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: "#0a0a0a",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#0a0a0a",
+  },
+  scrollContainer: {
+    flexGrow: 1,
     padding: 16,
-    backgroundColor: "slategray",
   },
-  input: {
-    height: 40,
-    // borderColor: "black",
-    borderWidth: 1,
-    marginBottom: 10,
-    padding: 8,
-    // textShadowColor: "white",
+  formContainer: {
+    backgroundColor: "#1a1a1a",
+    borderRadius: 8,
+    overflow: "hidden",
+    marginVertical: 16,
   },
-  errorText: {
-    color: "red",
-    marginBottom: 10,
+  formHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
   },
-  submittedContainer: {
-    marginTop: 20,
+  formHeaderTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+    marginLeft: 8,
   },
-  submittedTitle: {
+  formBody: {
+    padding: 16,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  label: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 8,
+    color: "#ccc",
   },
-  button: {
-    marginTop: 20,
+  input: {
+    backgroundColor: "#2a2a2a",
+    color: "white",
+    borderRadius: 4,
+    padding: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#444",
+  },
+  inputError: {
+    borderColor: "#ff4d4f",
+  },
+  errorText: {
+    color: "#ff4d4f",
+    marginTop: 4,
+    fontSize: 14,
+  },
+  helperText: {
+    color: "#888",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  submitButton: {
+    backgroundColor: "#1e3a29",
+    borderRadius: 4,
+    padding: 14,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  disabledButton: {
+    opacity: 0.7,
+  },
+  submitButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 8,
   },
 });

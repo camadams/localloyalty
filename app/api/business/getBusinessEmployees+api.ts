@@ -8,6 +8,7 @@ export type GetBusinessEmployeesResponse = {
   employeeEmail: string;
   canGivePoints: boolean;
   employeeImage: string | null;
+  status: string;
 }[];
 
 export async function POST(request: Request) {
@@ -19,10 +20,10 @@ export async function POST(request: Request) {
       employeeEmail: user.email,
       canGivePoints: businessEmployees.canGivePoints,
       employeeImage: user.image,
+      status: businessEmployees.status,
     })
     .from(businessEmployees)
     .innerJoin(user, eq(businessEmployees.userId, user.id))
     .where(eq(businessEmployees.businessId, businessId));
-  console.log({ employees });
   return Response.json({ data: employees });
 }

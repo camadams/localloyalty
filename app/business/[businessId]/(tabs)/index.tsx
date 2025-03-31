@@ -10,7 +10,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Link, Redirect, useRouter } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { Card } from "@/db/schema";
-import React, { Fragment, useCallback, useState } from "react";
+import React, { Fragment, useCallback, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { getBusinessLoyaltyCards } from "@/api/businessData";
@@ -145,6 +145,24 @@ export default function LoyaltyCardsScreen() {
 }
 
 function LoyaltyCardComponent({ card }: { card: Card }) {
+  // Add state for timestamp and QR code value
+  const [timestamp, setTimestamp] = useState<number>(Date.now());
+  const [qrValue, setQrValue] = useState<string>(
+    `https://localloyalty.expo.app/business?loyaltyCardId=${card.id}&timestamp=${timestamp}`
+  );
+
+  // Update timestamp and QR code every 10 seconds
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const newTimestamp = Date.now();
+      setTimestamp(newTimestamp);
+      const newQrValue = `https://localloyalty.expo.app/business?loyaltyCardId=${card.id}&timestamp=${newTimestamp}`;
+      setQrValue(newQrValue);
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [card.id]);
+
   return (
     <View style={styles.cardContainer}>
       <View style={styles.cardContent}>
@@ -195,7 +213,7 @@ function LoyaltyCardComponent({ card }: { card: Card }) {
         {/* Right side - QR Code */}
         <View style={styles.qrCodeContainer}>
           <QRCode
-            value={`https://localloyalty.expo.app/business?loyaltyCardId=${card.id}`}
+            value={qrValue}
             size={140}
             color="#000"
             backgroundColor="#fff"
@@ -336,14 +354,17 @@ const styles = StyleSheet.create({
   },
   refetchingContainer: {
     position: "absolute",
-    top: 60,
-    right: 16,
+    bottom: 20,
+    left: 0,
+    right: 0,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     borderRadius: 8,
     padding: 8,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
+    marginHorizontal: 16,
   },
   refetchingText: {
     fontSize: 12,

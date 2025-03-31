@@ -116,9 +116,15 @@ export const businessEmployees = pgTable(
       .notNull()
       .references(() => businesses.id),
     canGivePoints: boolean("can_give_points").notNull().default(true),
+    status: text("status", {
+      enum: ["pending", "active", "expired", "suspended", "revoked"],
+    })
+      .default("pending")
+      .notNull(),
     assignedBy: text("assigned_by").references(() => user.id),
     assignedAt: timestamp("assigned_at").defaultNow(),
     createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
   }
   // (table) => ({
   //   primaryKey: primaryKey({ columns: [table.userId, table.businessId] }),
@@ -134,7 +140,7 @@ export const cardsInUse = pgTable("users_loyalty_cards", {
     .notNull()
     .references(() => loyaltyCards.id),
   points: integer("points").default(1).notNull(),
-  // maxPoints: integer("max_points").default(10).notNull(),
+  maxPoints: integer("max_points").default(10).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

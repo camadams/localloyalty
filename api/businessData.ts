@@ -1,5 +1,4 @@
 import { BusinessWithEmployees } from "@/app/api/business/business+api";
-import { CardResponse } from "@/app/api/business/getBusinessLoyaltyCards+api";
 import { GetBusinessEmployeesResponse } from "@/app/api/business/getBusinessEmployees+api";
 import { NewCard, Card } from "@/db/schema";
 import { getCookie } from "@/lib/auth-client";
@@ -81,9 +80,92 @@ export async function getBusinessEmployees(businessId: number) {
   }).then(async (response) => {
     const respJson = await response.json();
     if (response.ok) {
-      return respJson.data as GetBusinessEmployeesResponse;
+      return respJson.data as {
+        employeeId: number;
+        employeeName: string;
+        employeeEmail: string;
+        canGivePoints: boolean;
+        employeeImage: string | null;
+        status: string;
+      }[];
     } else {
       throw new Error(respJson.error || "Failed to fetch business employees");
+    }
+  });
+}
+
+export async function createBusiness(name: string) {
+  return fetch(`/api/newbusiness`, {
+    method: "POST",
+    headers: {
+      Cookie: getCookie(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name }),
+  }).then(async (response) => {
+    const respJson = await response.json();
+    if (response.ok) {
+      return respJson;
+    } else {
+      throw new Error(respJson.message || "Failed to create business");
+    }
+  });
+}
+
+export async function applyForJob(businessId: number) {
+  return fetch(`/api/business/applyForJob`, {
+    method: "POST",
+    headers: {
+      Cookie: getCookie(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ businessId }),
+  }).then(async (response) => {
+    const respJson = await response.json();
+    if (response.ok) {
+      return respJson;
+    } else {
+      throw new Error(respJson.message || "Failed to apply for job");
+    }
+  });
+}
+
+export async function updateEmployeeStatus(
+  employeeId: number,
+  businessId: number,
+  status: "active" | "suspended" | "revoked",
+  canGivePoints: boolean
+) {
+  return fetch(`/api/business/updateEmployeeStatus`, {
+    method: "POST",
+    headers: {
+      Cookie: getCookie(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ employeeId, businessId, status, canGivePoints }),
+  }).then(async (response) => {
+    const respJson = await response.json();
+    if (response.ok) {
+      return respJson;
+    } else {
+      throw new Error(respJson.message || "Failed to update employee status");
+    }
+  });
+}
+
+export async function getAllBusinesses(): Promise<{ id: number; name: string }[]> {
+  return fetch(`/api/business/getAllBusinesses`, {
+    method: "POST",
+    headers: {
+      Cookie: getCookie(),
+      "Content-Type": "application/json",
+    },
+  }).then(async (response) => {
+    const respJson = await response.json();
+    if (response.ok) {
+      return respJson.data;
+    } else {
+      throw new Error(respJson.message || "Failed to fetch businesses");
     }
   });
 }

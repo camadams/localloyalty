@@ -20,13 +20,16 @@ export async function getCardsInUse() {
 }
 
 export type AddOrScanResponse = { message: string; success: boolean };
-export async function addOrScan(loyaltyCardId: CardInUse["loyaltyCardId"]) {
+export async function addOrScan(
+  loyaltyCardId: CardInUse["loyaltyCardId"],
+  timestamp: number
+) {
   return fetch("/api/customer/addOrScan", {
     method: "POST",
     headers: {
       Cookie: getCookie(),
     },
-    body: JSON.stringify({ loyaltyCardId }),
+    body: JSON.stringify({ loyaltyCardId, timestamp }),
   }).then(async (response) => {
     if (response.ok) {
       const respJson = await response.json();

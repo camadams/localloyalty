@@ -64,7 +64,7 @@ export default function TabTwoScreen() {
       </View> */}
 
       {/* Loading state */}
-      <ThemedText>{JSON.stringify(ses, null, 2)}</ThemedText>
+      {/* <ThemedText>{JSON.stringify(ses, null, 2)}</ThemedText> */}
       {isLoadingCardsInUse ? (
         <View style={styles.contentContainer}>
           <ActivityIndicator size="large" color="#1e3a29" />
@@ -241,15 +241,17 @@ const styles = StyleSheet.create({
   },
   refetchingContainer: {
     position: "absolute",
-    top: 70,
-    right: 16,
+    bottom: 20,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 8,
+    padding: 8,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 6,
+    justifyContent: "center",
+    gap: 8,
+    marginHorizontal: 16,
   },
   refetchingText: {
     fontSize: 12,

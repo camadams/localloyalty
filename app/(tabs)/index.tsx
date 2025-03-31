@@ -28,10 +28,13 @@ export default function Page() {
             style={styles.customerButton}
             onPress={() => router.push("/customer")}
           >
-            I am a Customer
+            View My Cards
           </AppButton>
           <AppButton onPress={() => router.push("/business")}>
-            I am a Business
+            View My Businesses
+          </AppButton>
+          <AppButton onPress={() => router.push("/businessIWorkFor")}>
+            View Businesses I Work For
           </AppButton>
           <AppButton onPress={() => signOut()}>Sign Out</AppButton>
         </Fragment>
@@ -46,7 +49,6 @@ export default function Page() {
           </AppButton>
         </Fragment>
       )}
-      <AppButton onPress={() => router.push("/customer")}>Customer</AppButton>
     </ThemedView>
   );
 }
