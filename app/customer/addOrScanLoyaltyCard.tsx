@@ -18,7 +18,7 @@ import { CardInUse } from "@/db/schema";
 
 export default function UserScansPoints() {
   const router = useRouter();
-  const { user, isPending: isPendingSession } = useAuth();
+  const { user, contextLoading: isPendingSession } = useAuth();
   const queryClient = useQueryClient();
 
   // Camera and scanning state

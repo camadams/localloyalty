@@ -24,7 +24,7 @@ type BusinessFormData = {
 
 export default function NewBusiness() {
   const router = useRouter();
-  const { user, isPending: isPendingAuth } = useAuth();
+  const { user, contextLoading: isPendingAuth } = useAuth();
   const queryClient = useQueryClient();
 
   // Form state
@@ -113,9 +113,7 @@ export default function NewBusiness() {
                 }
               />
               {errors.name && (
-                <ThemedText style={styles.errorText}>
-                  {errors.name}
-                </ThemedText>
+                <ThemedText style={styles.errorText}>{errors.name}</ThemedText>
               )}
               <ThemedText style={styles.helperText}>
                 This will be displayed to customers
@@ -124,7 +122,10 @@ export default function NewBusiness() {
 
             {/* Submit Button */}
             <TouchableOpacity
-              style={[styles.submitButton, isSubmitting && styles.disabledButton]}
+              style={[
+                styles.submitButton,
+                isSubmitting && styles.disabledButton,
+              ]}
               onPress={handleSubmit}
               disabled={isSubmitting}
             >
@@ -143,7 +144,9 @@ export default function NewBusiness() {
             {/* Display API error if any */}
             {submitError && (
               <ThemedText style={styles.errorText}>
-                {submitError instanceof Error ? submitError.message : "An error occurred"}
+                {submitError instanceof Error
+                  ? submitError.message
+                  : "An error occurred"}
               </ThemedText>
             )}
           </View>

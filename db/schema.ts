@@ -105,7 +105,7 @@ export const loyaltyCards = pgTable("loyalty_card", {
 });
 
 // Business employees join table with permissions
-export const businessEmployees = pgTable(
+export const employees = pgTable(
   "business_employee",
   {
     id: serial("id").primaryKey(),

@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { businessEmployees, businesses, loyaltyCards, user } from "@/db/schema";
+import { employees, businesses, loyaltyCards, user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export type GetBusinessEmployeesResponse = {
@@ -13,17 +13,17 @@ export type GetBusinessEmployeesResponse = {
 
 export async function POST(request: Request) {
   const { businessId } = await request.json();
-  const employees = await db
+  const employeesResult = await db
     .select({
       employeeId: user.id,
       employeeName: user.name,
       employeeEmail: user.email,
-      canGivePoints: businessEmployees.canGivePoints,
+      canGivePoints: employees.canGivePoints,
       employeeImage: user.image,
-      status: businessEmployees.status,
+      status: employees.status,
     })
-    .from(businessEmployees)
-    .innerJoin(user, eq(businessEmployees.userId, user.id))
-    .where(eq(businessEmployees.businessId, businessId));
-  return Response.json({ data: employees });
+    .from(employees)
+    .innerJoin(user, eq(employees.userId, user.id))
+    .where(eq(employees.businessId, businessId));
+  return Response.json({ data: employeesResult });
 }

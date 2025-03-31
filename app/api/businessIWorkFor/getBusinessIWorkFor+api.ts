@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { businesses, businessEmployees } from "@/db/schema";
+import { businesses, employees } from "@/db/schema";
 import { withAuth } from "@/lib/withAuth";
 import { eq, and } from "drizzle-orm";
 import { User } from "better-auth/types";
@@ -18,15 +18,12 @@ export const POST = withAuth(async (request: Request, user: User) => {
       .select({
         id: businesses.id,
         name: businesses.name,
-        canGivePoints: businessEmployees.canGivePoints,
-        myEmploymentStatus: businessEmployees.status,
+        canGivePoints: employees.canGivePoints,
+        myEmploymentStatus: employees.status,
       })
-      .from(businessEmployees)
-      .innerJoin(
-        businesses,
-        eq(businessEmployees.businessId, businesses.id)
-      )
-      .where(eq(businessEmployees.userId, user.id));
+      .from(employees)
+      .innerJoin(businesses, eq(employees.businessId, businesses.id))
+      .where(eq(employees.userId, user.id));
 
     return Response.json({
       data: businessesIWorkFor,

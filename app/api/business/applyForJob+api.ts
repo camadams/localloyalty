@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { businessEmployees } from "@/db/schema";
+import { employees } from "@/db/schema";
 import { withAuth } from "@/lib/withAuth";
 import { User } from "better-auth/types";
 import { and, eq } from "drizzle-orm";
@@ -24,12 +24,9 @@ export const POST = withAuth(async (request: Request, user: User) => {
     // Check if the user already has a pending or active application
     const existingApplication = await db
       .select()
-      .from(businessEmployees)
+      .from(employees)
       .where(
-        and(
-          eq(businessEmployees.userId, user.id),
-          eq(businessEmployees.businessId, businessId)
-        )
+        and(eq(employees.userId, user.id), eq(employees.businessId, businessId))
       );
 
     if (existingApplication.length > 0) {
@@ -41,14 +38,14 @@ export const POST = withAuth(async (request: Request, user: User) => {
 
     // Create a new application with pending status
     const [result] = await db
-      .insert(businessEmployees)
+      .insert(employees)
       .values({
         userId: user.id,
         businessId,
         status: "pending",
         canGivePoints: false, // Default to false until approved
       })
-      .returning({ id: businessEmployees.id });
+      .returning({ id: employees.id });
 
     return Response.json({
       success: true,

@@ -29,7 +29,7 @@ type LoyaltyCardFormData = {
 export default function NewLoyaltyCardScreen() {
   const router = useRouter();
   const { businessId } = useGlobalSearchParams<{ businessId: string }>();
-  const { user, isPending: isPendingAuth } = useAuth();
+  const { user, contextLoading: isPendingAuth } = useAuth();
   const queryClient = useQueryClient();
 
   // Form state

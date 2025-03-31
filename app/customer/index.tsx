@@ -22,7 +22,7 @@ const { width } = Dimensions.get("window");
 
 export default function TabTwoScreen() {
   const router = useRouter();
-  const { user, isPending: isPendingSession } = useAuth();
+  const { user, contextLoading: isPendingSession } = useAuth();
   const ses = useSession();
   const {
     data: usersCards,

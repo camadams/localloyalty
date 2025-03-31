@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { businessEmployees, businesses, loyaltyCards, user } from "@/db/schema";
+import { employees, businesses, loyaltyCards, user } from "@/db/schema";
 import { withAuth } from "@/lib/withAuth";
 import { User } from "better-auth/types";
 import { eq, inArray } from "drizzle-orm";
@@ -41,16 +41,16 @@ async function getOwnedBusinessesAndEmployees(
   if (businessIds.length === 0) return [];
 
   // Find employees of those businesses
-  const employees = await db
+  const employeesResult = await db
     .select({
-      businessId: businessEmployees.businessId,
+      businessId: employees.businessId,
       userId: user.id,
       userName: user.name,
       userEmail: user.email,
     })
-    .from(businessEmployees)
-    .innerJoin(user, eq(businessEmployees.userId, user.id))
-    .where(inArray(businessEmployees.businessId, businessIds));
+    .from(employees)
+    .innerJoin(user, eq(employees.userId, user.id))
+    .where(inArray(employees.businessId, businessIds));
 
   // Group employees by business
   const businessMap = new Map<number, BusinessWithEmployees>();
@@ -59,7 +59,7 @@ async function getOwnedBusinessesAndEmployees(
     businessMap.set(businessId, { businessId, businessName, employees: [] });
   });
 
-  employees.forEach(({ businessId, userId, userName, userEmail }) => {
+  employeesResult.forEach(({ businessId, userId, userName, userEmail }) => {
     businessMap
       .get(businessId)
       ?.employees.push({ businessId, userId, userName, userEmail });

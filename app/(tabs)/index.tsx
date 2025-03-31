@@ -33,9 +33,6 @@ export default function Page() {
           <AppButton onPress={() => router.push("/business")}>
             View My Businesses
           </AppButton>
-          <AppButton onPress={() => router.push("/businessIWorkFor")}>
-            View Businesses I Work For
-          </AppButton>
           <AppButton onPress={() => signOut()}>Sign Out</AppButton>
         </Fragment>
       ) : (

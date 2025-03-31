@@ -22,7 +22,7 @@ import { GetBusinessEmployeesResponse } from "@/app/api/business/getBusinessEmpl
 
 export default function EmployeesScreen() {
   const { businessId } = useGlobalSearchParams<{ businessId: string }>();
-  const { user, isPending: isPendingAuth } = useAuth();
+  const { user, contextLoading: isPendingAuth } = useAuth();
   const queryClient = useQueryClient();
 
   // Fetch employees for this business

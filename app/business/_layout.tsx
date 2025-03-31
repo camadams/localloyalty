@@ -24,15 +24,13 @@ export default function BusinessLayout() {
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
               <IconSymbol name="building.2" size={24} color="white" />
-              <ThemedText style={styles.headerTitle}>
-                Your Businesses
-              </ThemedText>
+              <ThemedText style={styles.headerTitle}>Businesses</ThemedText>
             </View>
           ),
         }}
       />
       <Stack.Screen
-        name="new"
+        name="add"
         options={{
           headerTitle: () => (
             <View style={styles.headerTitleContainer}>
@@ -46,7 +44,7 @@ export default function BusinessLayout() {
       />
 
       <Stack.Screen
-        name="[businessId]"
+        name="[businessId]/loyaltyCards"
         options={{
           headerShown: false,
         }}

@@ -1,5 +1,7 @@
 import { BusinessWithEmployees } from "@/app/api/business/business+api";
-import { GetBusinessEmployeesResponse } from "@/app/api/business/getBusinessEmployees+api";
+import { GetOwnedAndEmployeedByBusinessesResponse } from "@/app/api/business/getOwnedAndEmployeedByBusinesses+api";
+import { GetOwnedAndEmployeedByLoyaltyCardsResponse } from "@/app/api/business/getOwnedAndEmployeedByLoyaltyCards+api";
+import { GetOwnedBusinessIdsResponse } from "@/app/api/business/getOwnedBusinessIds+api";
 import { NewCard, Card } from "@/db/schema";
 import { getCookie } from "@/lib/auth-client";
 
@@ -38,9 +40,7 @@ export async function createLoyaltyCard(cardData: Omit<NewCard, "id">) {
   });
 }
 
-export async function getBusinessLoyaltyCards(
-  businessId: number
-): Promise<Card[]> {
+export async function getBusinessLoyaltyCards(businessId: number) {
   try {
     const response = await fetch(`/api/business/getBusinessLoyaltyCards`, {
       method: "POST",
@@ -153,7 +153,9 @@ export async function updateEmployeeStatus(
   });
 }
 
-export async function getAllBusinesses(): Promise<{ id: number; name: string }[]> {
+export async function getAllBusinesses(): Promise<
+  { id: number; name: string }[]
+> {
   return fetch(`/api/business/getAllBusinesses`, {
     method: "POST",
     headers: {
@@ -164,6 +166,58 @@ export async function getAllBusinesses(): Promise<{ id: number; name: string }[]
     const respJson = await response.json();
     if (response.ok) {
       return respJson.data;
+    } else {
+      throw new Error(respJson.message || "Failed to fetch businesses");
+    }
+  });
+}
+
+export async function getOwnedBusinessIds() {
+  return fetch(`/api/business/getOwnedBusinessIds`, {
+    method: "POST",
+    headers: {
+      Cookie: getCookie(),
+      "Content-Type": "application/json",
+    },
+  }).then(async (response) => {
+    const respJson = await response.json();
+    if (response.ok) {
+      return respJson.data as GetOwnedBusinessIdsResponse;
+    } else {
+      throw new Error(respJson.message || "Failed to fetch businesses");
+    }
+  });
+}
+
+export async function getOwnedAndEmployeedByBusinesses() {
+  return fetch(`/api/business/getOwnedAndEmployeedByBusinesses`, {
+    method: "POST",
+    headers: {
+      Cookie: getCookie(),
+      "Content-Type": "application/json",
+    },
+  }).then(async (response) => {
+    const respJson = await response.json();
+    if (response.ok) {
+      return respJson as GetOwnedAndEmployeedByBusinessesResponse;
+    } else {
+      throw new Error(respJson.message || "Failed to fetch businesses");
+    }
+  });
+}
+
+export async function getOwnedAndEmployeedByLoyaltyCards(businessId: number) {
+  return fetch(`/api/business/getOwnedAndEmployeedByLoyaltyCards`, {
+    method: "POST",
+    headers: {
+      Cookie: getCookie(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ businessId }),
+  }).then(async (response) => {
+    const respJson = await response.json();
+    if (response.ok) {
+      return respJson as GetOwnedAndEmployeedByLoyaltyCardsResponse;
     } else {
       throw new Error(respJson.message || "Failed to fetch businesses");
     }

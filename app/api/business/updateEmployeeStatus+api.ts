@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { businessEmployees, businesses } from "@/db/schema";
+import { employees, businesses } from "@/db/schema";
 import { withAuth } from "@/lib/withAuth";
 import { User } from "better-auth/types";
 import { and, eq } from "drizzle-orm";
@@ -44,7 +44,7 @@ export const POST = withAuth(async (request: Request, user: User) => {
 
     // Update the employee status
     await db
-      .update(businessEmployees)
+      .update(employees)
       .set({
         status,
         canGivePoints: canGivePoints !== undefined ? canGivePoints : false,
@@ -54,8 +54,8 @@ export const POST = withAuth(async (request: Request, user: User) => {
       })
       .where(
         and(
-          eq(businessEmployees.userId, employeeId),
-          eq(businessEmployees.businessId, businessId)
+          eq(employees.userId, employeeId),
+          eq(employees.businessId, businessId)
         )
       );
 
